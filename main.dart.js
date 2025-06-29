@@ -32300,7 +32300,7 @@ o=B.e.NZ(a6,"<!-- body -->",n.charCodeAt(0)==0?n:n)
 if(!0)A.O6().$1(o)
 return o},
 b56(a){if(B.e.bW(a,"assets/"))return a
-return"assets/models/"+a},
+return"assets/assets/models/"+a},
 a9o(a){if(B.e.bW(a,"assets/"))return a
 return"assets/videos/"+a},
 bfT(a){if(isFinite(a))return A.e_(0,B.c.V(a*1000))
