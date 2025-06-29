@@ -5,24 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Beacon World App - 现代化社交学习应用">
-
+  
   <!-- 动态设置base href -->
   <script>
     // 立即执行，在其他资源加载前设置正确的base href
     (function() {
       const path = window.location.pathname;
       let basePath = '/';
-
+      
       // 检测GitHub Pages项目页面
       if (path.includes('/BeaconWorld_Web_Test/')) {
         basePath = '/BeaconWorld_Web_Test/';
       }
-
+      
       // 创建并设置base元素
       const base = document.createElement('base');
       base.href = basePath;
       document.head.appendChild(base);
-
+      
       console.log('Base href 设置为:', basePath);
     })();
   </script>
@@ -51,7 +51,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       overflow: hidden;
     }
-
+    
     .loading-container {
       position: fixed;
       top: 0;
@@ -66,7 +66,7 @@
       color: white;
       z-index: 9999;
     }
-
+    
     .loading-spinner {
       width: 50px;
       height: 50px;
@@ -76,24 +76,78 @@
       animation: spin 1s linear infinite;
       margin-bottom: 20px;
     }
-
+    
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
+    
     .loading-text {
       font-size: 18px;
       font-weight: 500;
       text-align: center;
       margin-bottom: 10px;
     }
-
+    
     .loading-debug {
       font-size: 12px;
       opacity: 0.7;
       text-align: center;
       font-family: monospace;
+    }
+    
+    .error-container {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      max-width: 500px;
+      text-align: center;
+      z-index: 10000;
+    }
+    
+    .error-title {
+      color: #dc3545;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    
+    .error-message {
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .error-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
     }
   </style>
 </head>
@@ -102,6 +156,17 @@
     <div class="loading-spinner"></div>
     <div class="loading-text">正在加载 Beacon World App...</div>
     <div class="loading-debug" id="loading-debug">初始化中...</div>
+  </div>
+  
+  <div class="error-container" id="error-container">
+    <div class="error-title">⚠️ 加载失败</div>
+    <div class="error-message" id="error-message">
+      应用加载遇到问题，请尝试以下解决方案：
+    </div>
+    <div class="error-actions">
+      <button class="btn btn-primary" onclick="location.reload()">🔄 重新加载</button>
+      <a class="btn btn-secondary" href="debug.html">🔧 诊断工具</a>
+    </div>
   </div>
 
   <script>
@@ -113,43 +178,95 @@
       }
       console.log('🔧', message);
     }
-
+    
+    // 显示错误
+    function showError(message) {
+      const errorContainer = document.getElementById('error-container');
+      const errorMessage = document.getElementById('error-message');
+      const loading = document.getElementById('loading');
+      
+      if (errorMessage) errorMessage.textContent = message;
+      if (errorContainer) errorContainer.style.display = 'block';
+      if (loading) loading.style.display = 'none';
+    }
+    
     // 隐藏加载界面
     function hideLoading() {
       const loading = document.getElementById('loading');
       if (loading) loading.style.display = 'none';
     }
-
+    
+    // 资源加载检查
+    function checkCriticalResources() {
+      updateDebugInfo('检查关键资源...');
+      
+      const resources = ['flutter_bootstrap.js', 'main.dart.js', 'manifest.json'];
+      let loadedCount = 0;
+      let errorCount = 0;
+      
+      resources.forEach(resource => {
+        fetch(resource, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              loadedCount++;
+              updateDebugInfo(`✅ ${resource} 正常 (${loadedCount}/${resources.length})`);
+            } else {
+              errorCount++;
+              console.error(`❌ ${resource} 状态码: ${response.status}`);
+            }
+          })
+          .catch(error => {
+            errorCount++;
+            console.error(`❌ ${resource} 加载失败:`, error);
+          })
+          .finally(() => {
+            if (loadedCount + errorCount === resources.length) {
+              if (errorCount > 0) {
+                showError(`有 ${errorCount} 个关键资源加载失败，请检查网络连接或稍后重试。`);
+              } else {
+                updateDebugInfo('所有资源检查完成，启动应用...');
+              }
+            }
+          });
+      });
+    }
+    
     // 错误处理
     window.addEventListener('error', function(event) {
       console.error('页面错误:', event.error);
-
+      
       if (event.target && event.target.src) {
         const src = event.target.src;
         if (src.includes('flutter') || src.includes('main.dart')) {
-          updateDebugInfo('❌ Flutter 资源加载失败');
+          showError('Flutter 应用加载失败，请检查网络连接或清除浏览器缓存后重试。');
         }
       }
     });
-
+    
     // Flutter 事件监听
     window.addEventListener('flutter-first-frame', function() {
-      updateDebugInfo('✅ Flutter 启动成功');
+      updateDebugInfo('Flutter 首帧渲染完成');
       hideLoading();
     });
-
+    
     // 超时处理
     setTimeout(function() {
       const loading = document.getElementById('loading');
       if (loading && loading.style.display !== 'none') {
-        updateDebugInfo('⏰ 加载超时，请刷新页面');
+        showError('应用加载超时，请检查网络连接或尝试刷新页面。');
       }
     }, 15000);
-
+    
+    // 页面加载完成后检查资源
+    window.addEventListener('load', function() {
+      updateDebugInfo('页面加载完成，检查资源...');
+      setTimeout(checkCriticalResources, 500);
+    });
+    
     // 立即更新调试信息
     updateDebugInfo(`当前路径: ${window.location.pathname}`);
   </script>
-
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

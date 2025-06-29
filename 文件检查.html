@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 文件完整性检查 - Beacon World App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .file-section {
+            margin-bottom: 30px;
+        }
+
+        .file-section h3 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+            font-family: 'Courier New', monospace;
+        }
+
+        .file-item.checking {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+
+        .file-item.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .file-item.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .file-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .file-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-checking {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .summary {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .summary h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-success { color: #28a745; }
+        .stat-error { color: #dc3545; }
+        .stat-total { color: #6c757d; }
+
+        .button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 文件完整性检查</h1>
+            <p>检查所有关键文件是否正确部署</p>
+        </div>
+
+        <div class="content">
+            <div class="file-section">
+                <h3>🚀 Flutter 核心文件</h3>
+                <div class="file-list" id="flutter-files"></div>
+            </div>
+
+            <div class="file-section">
+                <h3>📱 应用配置文件</h3>
+                <div class="file-list" id="config-files"></div>
+            </div>
+
+            <div class="file-section">
+                <h3>🎮 资源文件</h3>
+                <div class="file-list" id="asset-files"></div>
+            </div>
+
+            <div class="file-section">
+                <h3>🛠️ 测试工具</h3>
+                <div class="file-list" id="tool-files"></div>
+            </div>
+
+            <div class="summary" id="summary">
+                <h4>检查统计</h4>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-number stat-success" id="success-count">0</div>
+                        <div>成功</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number stat-error" id="error-count">0</div>
+                        <div>失败</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number stat-total" id="total-count">0</div>
+                        <div>总计</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="button" onclick="checkAllFiles()">🔄 重新检查</button>
+                <button class="button" onclick="downloadReport()">📄 下载报告</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const filesToCheck = {
+            flutter: [
+                'flutter_bootstrap.js',
+                'flutter.js',
+                'flutter_service_worker.js',
+                'main.dart.js',
+                'version.json'
+            ],
+            config: [
+                'index.html',
+                'manifest.json',
+                'favicon.png',
+                '.nojekyll'
+            ],
+            assets: [
+                'assets/assets/models/bommieBoy.glb',
+                'assets/assets/models/bommieGirl.glb',
+                'assets/assets/models/bommie.glb',
+                'assets/assets/images/events/event1.png',
+                'assets/assets/videos/1.mp4'
+            ],
+            tools: [
+                'model-test.html',
+                'debug.html',
+                'test.html',
+                '路径管理器测试.html'
+            ]
+        };
+
+        let checkResults = {
+            success: 0,
+            error: 0,
+            total: 0
+        };
+
+        function createFileItem(fileName, status = 'checking') {
+            const statusText = {
+                checking: '检查中...',
+                success: '✅ 正常',
+                error: '❌ 缺失'
+            };
+
+            return `
+                <div class="file-item ${status}" id="file-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}">
+                    <span class="file-name">${fileName}</span>
+                    <span class="file-status status-${status}">${statusText[status]}</span>
+                </div>
+            `;
+        }
+
+        async function checkFile(fileName) {
+            try {
+                const response = await fetch(fileName, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function checkAllFiles() {
+            checkResults = { success: 0, error: 0, total: 0 };
+
+            // 初始化显示
+            for (const [category, files] of Object.entries(filesToCheck)) {
+                const container = document.getElementById(`${category}-files`);
+                container.innerHTML = '';
+                
+                files.forEach(file => {
+                    container.innerHTML += createFileItem(file, 'checking');
+                    checkResults.total++;
+                });
+            }
+
+            updateSummary();
+
+            // 检查每个文件
+            for (const [category, files] of Object.entries(filesToCheck)) {
+                for (const file of files) {
+                    const exists = await checkFile(file);
+                    const fileId = `file-${file.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    const fileElement = document.getElementById(fileId);
+                    
+                    if (fileElement) {
+                        const status = exists ? 'success' : 'error';
+                        fileElement.className = `file-item ${status}`;
+                        
+                        const statusElement = fileElement.querySelector('.file-status');
+                        statusElement.className = `file-status status-${status}`;
+                        statusElement.textContent = exists ? '✅ 正常' : '❌ 缺失';
+                        
+                        if (exists) {
+                            checkResults.success++;
+                        } else {
+                            checkResults.error++;
+                        }
+                        
+                        updateSummary();
+                    }
+                    
+                    // 添加小延迟，避免请求过快
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+        }
+
+        function updateSummary() {
+            document.getElementById('success-count').textContent = checkResults.success;
+            document.getElementById('error-count').textContent = checkResults.error;
+            document.getElementById('total-count').textContent = checkResults.total;
+        }
+
+        function downloadReport() {
+            const report = generateReport();
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `beacon-world-file-check-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generateReport() {
+            const timestamp = new Date().toLocaleString('zh-CN');
+            let report = `Beacon World App 文件检查报告\n`;
+            report += `检查时间: ${timestamp}\n`;
+            report += `检查URL: ${window.location.href}\n\n`;
+            
+            report += `统计信息:\n`;
+            report += `- 总文件数: ${checkResults.total}\n`;
+            report += `- 正常文件: ${checkResults.success}\n`;
+            report += `- 缺失文件: ${checkResults.error}\n\n`;
+            
+            for (const [category, files] of Object.entries(filesToCheck)) {
+                report += `${category.toUpperCase()} 文件:\n`;
+                files.forEach(file => {
+                    const fileId = `file-${file.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    const fileElement = document.getElementById(fileId);
+                    const status = fileElement && fileElement.classList.contains('success') ? '✅' : '❌';
+                    report += `  ${status} ${file}\n`;
+                });
+                report += '\n';
+            }
+            
+            return report;
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', checkAllFiles);
+    </script>
+</body>
+</html>
