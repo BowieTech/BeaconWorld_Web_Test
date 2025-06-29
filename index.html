@@ -1,29 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <base href="/">
+  <!-- 移除base href，避免本地文件路径问题 -->
 
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Beacon World App - 现代化社交学习应用">
+  <meta name="keywords" content="学习,社交,应用,Flutter,Web">
+  <meta name="author" content="Beacon World Team">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="my_beacon_app_new">
+  <meta name="apple-mobile-web-app-title" content="Beacon World App">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
+  <!-- Open Graph meta tags -->
+  <meta property="og:title" content="Beacon World App">
+  <meta property="og:description" content="现代化社交学习应用">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="icons/Icon-512.png">
+
   <!-- 使用HTTPS加载model-viewer脚本 -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
 
-  <title>my_beacon_app_new</title>
+  <title>Beacon World App - 现代化社交学习应用</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* 加载动画 */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .loading-content {
+      text-align: center;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .loading-subtitle {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  </style>
 </head>
 <body>
+  <!-- 加载动画 -->
+  <div id="loading" class="loading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">🌟 Beacon World App</div>
+      <div class="loading-subtitle">正在加载应用...</div>
+    </div>
+  </div>
+
+  <!-- Flutter应用容器 -->
+  <div id="app-container" style="display: none;"></div>
+
+  <script>
+    // 错误处理
+    window.addEventListener('error', function(e) {
+      console.error('应用加载错误:', e.error);
+      document.getElementById('loading').innerHTML = `
+        <div class="loading-content">
+          <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+          <div class="loading-text">应用加载失败</div>
+          <div class="loading-subtitle">请刷新页面重试</div>
+          <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer;">刷新页面</button>
+        </div>
+      `;
+    });
+
+    // Flutter应用加载完成后隐藏加载动画
+    window.addEventListener('flutter-first-frame', function() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app-container').style.display = 'block';
+    });
+
+    // 超时处理
+    setTimeout(function() {
+      if (document.getElementById('loading').style.display !== 'none') {
+        document.getElementById('loading').innerHTML = `
+          <div class="loading-content">
+            <div style="font-size: 48px; margin-bottom: 20px;">⏰</div>
+            <div class="loading-text">加载时间较长</div>
+            <div class="loading-subtitle">请检查网络连接或刷新页面</div>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer;">刷新页面</button>
+          </div>
+        `;
+      }
+    }, 30000); // 30秒超时
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
