@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Beacon World App - 现代化社交学习应用">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Beacon World App">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Beacon World App - 本地版本</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .loading-container {
+      text-align: center;
+      color: white;
+      max-width: 500px;
+      padding: 2rem;
+    }
+    
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 30px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 300;
+    }
+    
+    .loading-subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    
+    .loading-status {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+    
+    .error-container {
+      display: none;
+      text-align: center;
+      color: white;
+      max-width: 600px;
+      padding: 2rem;
+    }
+    
+    .error-title {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #ff6b6b;
+    }
+    
+    .error-message {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    
+    .solutions {
+      text-align: left;
+      background: rgba(255,255,255,0.1);
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+    }
+    
+    .solutions h3 {
+      margin-top: 0;
+      color: #fff;
+    }
+    
+    .solutions ol {
+      margin: 0;
+      padding-left: 1.5rem;
+    }
+    
+    .solutions li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 25px;
+      border: 2px solid rgba(255,255,255,0.3);
+      margin: 0 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .button:hover {
+      background: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.5);
+    }
+    
+    #flutter-app {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载界面 -->
+  <div id="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <h1 class="loading-title">🌟 Beacon World App</h1>
+    <p class="loading-subtitle">正在加载应用...</p>
+    <div id="loading-status" class="loading-status">初始化中...</div>
+  </div>
+
+  <!-- 错误界面 -->
+  <div id="error" class="error-container">
+    <h2 class="error-title">❌ 应用加载失败</h2>
+    <p class="error-message">
+      很抱歉，应用无法正常加载。这通常是因为直接打开HTML文件导致的。
+    </p>
+    
+    <div class="solutions">
+      <h3>🔧 解决方案</h3>
+      <ol>
+        <li><strong>使用Web服务器运行</strong> (推荐)
+          <ul>
+            <li>安装Python: <a href="https://python.org/downloads/" target="_blank" style="color: #87CEEB;">python.org/downloads</a></li>
+            <li>在此目录运行: <code>python -m http.server 8080</code></li>
+            <li>访问: <a href="http://localhost:8080" target="_blank" style="color: #87CEEB;">http://localhost:8080</a></li>
+          </ul>
+        </li>
+        <li><strong>部署到GitHub Pages</strong> (最可靠)
+          <ul>
+            <li>创建GitHub仓库并上传所有文件</li>
+            <li>启用GitHub Pages功能</li>
+            <li>通过网址访问应用</li>
+          </ul>
+        </li>
+        <li><strong>使用现代浏览器</strong>
+          <ul>
+            <li>推荐使用Chrome或Edge</li>
+            <li>确保启用JavaScript</li>
+            <li>清除浏览器缓存</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+    
+    <a href="诊断工具.html" class="button">🔧 诊断工具</a>
+    <a href="javascript:location.reload()" class="button">🔄 重新加载</a>
+  </div>
+
+  <!-- Flutter应用容器 -->
+  <div id="flutter-app"></div>
+
+  <script>
+    let loadingTimeout;
+    let errorShown = false;
+
+    function updateStatus(message) {
+      const statusEl = document.getElementById('loading-status');
+      if (statusEl) {
+        statusEl.textContent = message;
+      }
+      console.log('Loading status:', message);
+    }
+
+    function showError() {
+      if (errorShown) return;
+      errorShown = true;
+      
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      console.error('Application failed to load');
+    }
+
+    function showApp() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('flutter-app').style.display = 'block';
+      console.log('Application loaded successfully');
+    }
+
+    // 检查基本环境
+    updateStatus('检查浏览器环境...');
+    
+    // 检查必要的API
+    if (typeof WebAssembly === 'undefined') {
+      console.error('WebAssembly not supported');
+      updateStatus('浏览器不支持WebAssembly');
+      setTimeout(showError, 2000);
+    } else if (typeof fetch === 'undefined') {
+      console.error('Fetch API not supported');
+      updateStatus('浏览器不支持Fetch API');
+      setTimeout(showError, 2000);
+    } else {
+      updateStatus('环境检查通过，加载Flutter...');
+      
+      // 设置超时
+      loadingTimeout = setTimeout(() => {
+        updateStatus('加载超时，可能需要网络连接...');
+        setTimeout(showError, 5000);
+      }, 15000);
+
+      // 监听Flutter加载事件
+      window.addEventListener('flutter-first-frame', function() {
+        clearTimeout(loadingTimeout);
+        updateStatus('应用加载完成！');
+        setTimeout(showApp, 500);
+      });
+
+      // 加载Flutter
+      try {
+        updateStatus('加载Flutter引擎...');
+        
+        // 检查关键文件
+        fetch('main.dart.js', { method: 'HEAD' })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('main.dart.js not found');
+            }
+            updateStatus('加载应用代码...');
+            
+            // 动态加载Flutter bootstrap
+            const script = document.createElement('script');
+            script.src = 'flutter_bootstrap.js';
+            script.async = true;
+            script.onerror = () => {
+              console.error('Failed to load flutter_bootstrap.js');
+              updateStatus('Flutter引擎加载失败');
+              setTimeout(showError, 2000);
+            };
+            document.head.appendChild(script);
+          })
+          .catch(error => {
+            console.error('File check failed:', error);
+            updateStatus('应用文件检查失败');
+            setTimeout(showError, 2000);
+          });
+          
+      } catch (error) {
+        console.error('Flutter loading error:', error);
+        updateStatus('Flutter加载出错');
+        setTimeout(showError, 2000);
+      }
+    }
+
+    // 全局错误处理
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error);
+      if (!errorShown) {
+        updateStatus('发生错误: ' + (e.error?.message || e.message));
+        setTimeout(showError, 2000);
+      }
+    });
+
+    // 未处理的Promise错误
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('Unhandled promise rejection:', e.reason);
+      if (!errorShown) {
+        updateStatus('Promise错误: ' + e.reason);
+        setTimeout(showError, 2000);
+      }
+    });
+  </script>
+</body>
+</html>

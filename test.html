@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片测试 - Beacon World App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .test-image {
+            max-width: 150px;
+            margin: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            border-color: #28a745;
+        }
+        .error {
+            border-color: #dc3545;
+        }
+        .path {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Beacon World App - 图片测试</h1>
+        
+        <div class="test-section">
+            <h3>📍 页面信息</h3>
+            <p><strong>当前URL:</strong> <span id="current-url"></span></p>
+            <p><strong>Base URL:</strong> <span id="base-url"></span></p>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 事件图片测试</h3>
+            <div>
+                <img src="assets/assets/images/events/event1.png" alt="Event 1" class="test-image" onload="this.className+=' success'" onerror="this.className+=' error'">
+                <div class="path">assets/assets/images/events/event1.png</div>
+            </div>
+            <div>
+                <img src="assets/assets/images/events/event2.png" alt="Event 2" class="test-image" onload="this.className+=' success'" onerror="this.className+=' error'">
+                <div class="path">assets/assets/images/events/event2.png</div>
+            </div>
+            <div>
+                <img src="assets/assets/images/events/event3.png" alt="Event 3" class="test-image" onload="this.className+=' success'" onerror="this.className+=' error'">
+                <div class="path">assets/assets/images/events/event3.png</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>👤 头像图片测试</h3>
+            <div>
+                <img src="assets/assets/images/avatars/1.png" alt="Avatar 1" class="test-image" onload="this.className+=' success'" onerror="this.className+=' error'">
+                <div class="path">assets/assets/images/avatars/1.png</div>
+            </div>
+            <div>
+                <img src="assets/assets/images/avatars/user_avatar.png" alt="User Avatar" class="test-image" onload="this.className+=' success'" onerror="this.className+=' error'">
+                <div class="path">assets/assets/images/avatars/user_avatar.png</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 说明</h3>
+            <ul>
+                <li><span style="color: #28a745;">绿色边框</span> = 图片加载成功</li>
+                <li><span style="color: #dc3545;">红色边框</span> = 图片加载失败</li>
+                <li><span style="color: #666;">灰色边框</span> = 图片正在加载</li>
+            </ul>
+            <p><a href="index.html">🏠 返回主应用</a></p>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('base-url').textContent = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+        
+        // 3秒后统计结果
+        setTimeout(function() {
+            const images = document.querySelectorAll('.test-image');
+            let success = 0, error = 0;
+            images.forEach(img => {
+                if (img.className.includes('success')) success++;
+                else if (img.className.includes('error')) error++;
+            });
+            console.log(`图片测试结果: 成功 ${success}, 失败 ${error}`);
+            
+            if (error > 0) {
+                alert(`发现 ${error} 张图片加载失败，请检查文件是否正确上传到GitHub`);
+            } else if (success > 0) {
+                alert(`所有 ${success} 张图片加载成功！`);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
