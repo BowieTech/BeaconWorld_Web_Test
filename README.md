@@ -6,7 +6,9 @@
 
 ## 🚀 在线体验
 
-**立即访问**: [https://你的用户名.github.io/beacon-world-app/](https://你的用户名.github.io/beacon-world-app/)
+**立即访问**: [https://你的用户名.github.io/仓库名/](https://你的用户名.github.io/仓库名/)
+
+**图片测试**: [https://你的用户名.github.io/仓库名/test.html](https://你的用户名.github.io/仓库名/test.html)
 
 ## 📱 应用特色
 
