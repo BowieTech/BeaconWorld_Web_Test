@@ -101,7 +101,7 @@
   <div class="loading-container" id="loading">
     <div class="loading-spinner"></div>
     <div class="loading-text">正在加载 Beacon World App...</div>
-    <div class="loading-debug" id="loading-debug">初始化中...</div>
+    <div class="loading-debug" id="loading-debug">路径修复完成，正在启动...</div>
   </div>
 
   <script>
@@ -147,7 +147,7 @@
     }, 15000);
 
     // 立即更新调试信息
-    updateDebugInfo(`当前路径: ${window.location.pathname}`);
+    updateDebugInfo(`路径修复已应用，当前路径: ${window.location.pathname}`);
   </script>
 
   <script src="flutter_bootstrap.js" async></script>
