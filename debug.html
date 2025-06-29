@@ -63,6 +63,11 @@
             <h3>🖼️ 图片文件检查</h3>
             <div id="image-checks">正在检查...</div>
         </div>
+
+        <div class="test-item">
+            <h3>🎮 3D模型文件检查</h3>
+            <div id="model-checks">正在检查...</div>
+        </div>
         
         <div class="test-item">
             <h3>📊 检查结果</h3>
@@ -102,11 +107,20 @@
             'assets/assets/images/avatars/user_avatar.png'
         ];
 
+        // 需要检查的3D模型文件
+        const modelFiles = [
+            'assets/assets/models/bommieBoy.glb',
+            'assets/assets/models/bommieGirl.glb',
+            'assets/assets/models/bommie.glb'
+        ];
+
         let results = {
             criticalSuccess: 0,
             criticalError: 0,
             imageSuccess: 0,
-            imageError: 0
+            imageError: 0,
+            modelSuccess: 0,
+            modelError: 0
         };
 
         async function checkFile(url) {
@@ -155,7 +169,7 @@
                 const result = await checkFile(file);
                 const div = document.createElement('div');
                 div.className = result.success ? 'success' : 'error';
-                
+
                 if (result.success) {
                     div.innerHTML = `✅ <span class="code">${file}</span> - 状态: ${result.status}, 大小: ${result.size} bytes`;
                     results.imageSuccess++;
@@ -163,7 +177,29 @@
                     div.innerHTML = `❌ <span class="code">${file}</span> - 状态: ${result.status}${result.error ? `, 错误: ${result.error}` : ''}`;
                     results.imageError++;
                 }
-                
+
+                container.appendChild(div);
+            }
+        }
+
+        async function checkModelFiles() {
+            const container = document.getElementById('model-checks');
+            container.innerHTML = '';
+
+            for (const file of modelFiles) {
+                const result = await checkFile(file);
+                const div = document.createElement('div');
+                div.className = result.success ? 'success' : 'error';
+
+                if (result.success) {
+                    const sizeMB = result.size ? (parseInt(result.size) / 1024 / 1024).toFixed(2) + ' MB' : '未知';
+                    div.innerHTML = `✅ <span class="code">${file}</span> - 状态: ${result.status}, 大小: ${sizeMB}`;
+                    results.modelSuccess++;
+                } else {
+                    div.innerHTML = `❌ <span class="code">${file}</span> - 状态: ${result.status}${result.error ? `, 错误: ${result.error}` : ''}`;
+                    results.modelError++;
+                }
+
                 container.appendChild(div);
             }
         }
@@ -173,7 +209,8 @@
             container.innerHTML = `
                 <p><strong>关键文件:</strong> 成功 ${results.criticalSuccess}, 失败 ${results.criticalError}</p>
                 <p><strong>图片文件:</strong> 成功 ${results.imageSuccess}, 失败 ${results.imageError}</p>
-                <p><strong>总体状态:</strong> ${(results.criticalError === 0 && results.imageError === 0) ? '✅ 所有文件正常' : '❌ 发现问题'}</p>
+                <p><strong>3D模型:</strong> 成功 ${results.modelSuccess}, 失败 ${results.modelError}</p>
+                <p><strong>总体状态:</strong> ${(results.criticalError === 0 && results.imageError === 0 && results.modelError === 0) ? '✅ 所有文件正常' : '❌ 发现问题'}</p>
             `;
 
             updateSolutions();
@@ -225,6 +262,7 @@
         async function runChecks() {
             await checkCriticalFiles();
             await checkImageFiles();
+            await checkModelFiles();
             updateResults();
         }
 

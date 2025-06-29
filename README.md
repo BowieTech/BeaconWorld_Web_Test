@@ -8,7 +8,10 @@
 
 **立即访问**: [https://你的用户名.github.io/仓库名/](https://你的用户名.github.io/仓库名/)
 
-**图片测试**: [https://你的用户名.github.io/仓库名/test.html](https://你的用户名.github.io/仓库名/test.html)
+**测试页面**:
+- **图片测试**: [https://你的用户名.github.io/仓库名/test.html](https://你的用户名.github.io/仓库名/test.html)
+- **3D模型测试**: [https://你的用户名.github.io/仓库名/model-test.html](https://你的用户名.github.io/仓库名/model-test.html)
+- **完整诊断**: [https://你的用户名.github.io/仓库名/debug.html](https://你的用户名.github.io/仓库名/debug.html)
 
 ## 📱 应用特色
 

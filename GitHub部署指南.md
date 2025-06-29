@@ -134,7 +134,7 @@ your-domain.com
 <meta property="og:title" content="Beacon World App">
 <meta property="og:description" content="现代化社交学习应用">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://你的用户名.github.io/beacon-world-app/">
+
 ```
 
 ## 📊 部署后监控

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D模型测试 - Beacon World App</title>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .model-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .model-test {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            text-align: center;
+        }
+        .model-test.success {
+            border-color: #28a745;
+        }
+        .model-test.error {
+            border-color: #dc3545;
+        }
+        model-viewer {
+            width: 100%;
+            height: 200px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+        .model-info {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .model-path {
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 5px;
+            border-radius: 3px;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .file-check {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #ddd;
+        }
+        .file-check.success {
+            border-left-color: #28a745;
+        }
+        .file-check.error {
+            border-left-color: #dc3545;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 3D模型测试页面</h1>
+        
+        <div class="test-section">
+            <h3>📍 页面信息</h3>
+            <p><strong>当前URL:</strong> <span id="current-url"></span></p>
+            <p><strong>Base URL:</strong> <span id="base-url"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>📁 模型文件检查</h3>
+            <div id="file-checks">正在检查文件...</div>
+            <button onclick="checkFiles()">🔄 重新检查文件</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎮 3D模型加载测试</h3>
+            <p>以下是应用中使用的3D模型文件测试：</p>
+            
+            <div class="model-container">
+                <!-- Bommie Boy 模型 -->
+                <div class="model-test" id="bommieBoy-test">
+                    <h4>Bommie Boy</h4>
+                    <model-viewer 
+                        id="bommieBoy-viewer"
+                        src="assets/assets/models/bommieBoy.glb"
+                        alt="Bommie Boy 3D Model"
+                        auto-rotate
+                        camera-controls
+                        background-color="#f0f0f0">
+                    </model-viewer>
+                    <div class="model-info">
+                        <div class="model-path">assets/assets/models/bommieBoy.glb</div>
+                        <div class="status loading" id="bommieBoy-status">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- Bommie Girl 模型 -->
+                <div class="model-test" id="bommieGirl-test">
+                    <h4>Bommie Girl</h4>
+                    <model-viewer 
+                        id="bommieGirl-viewer"
+                        src="assets/assets/models/bommieGirl.glb"
+                        alt="Bommie Girl 3D Model"
+                        auto-rotate
+                        camera-controls
+                        background-color="#f0f0f0">
+                    </model-viewer>
+                    <div class="model-info">
+                        <div class="model-path">assets/assets/models/bommieGirl.glb</div>
+                        <div class="status loading" id="bommieGirl-status">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- Bommie 基础模型 -->
+                <div class="model-test" id="bommie-test">
+                    <h4>Bommie</h4>
+                    <model-viewer 
+                        id="bommie-viewer"
+                        src="assets/assets/models/bommie.glb"
+                        alt="Bommie 3D Model"
+                        auto-rotate
+                        camera-controls
+                        background-color="#f0f0f0">
+                    </model-viewer>
+                    <div class="model-info">
+                        <div class="model-path">assets/assets/models/bommie.glb</div>
+                        <div class="status loading" id="bommie-status">加载中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 测试结果</h3>
+            <div id="results">等待测试完成...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 解决方案</h3>
+            <div id="solutions"></div>
+        </div>
+
+        <p><a href="index.html">🏠 返回主应用</a> | <a href="debug.html">🔧 调试页面</a></p>
+    </div>
+
+    <script>
+        // 更新页面信息
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('base-url').textContent = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+
+        const modelFiles = [
+            'assets/assets/models/bommieBoy.glb',
+            'assets/assets/models/bommieGirl.glb',
+            'assets/assets/models/bommie.glb'
+        ];
+
+        let testResults = {
+            fileSuccess: 0,
+            fileError: 0,
+            modelSuccess: 0,
+            modelError: 0
+        };
+
+        // 检查文件是否存在
+        async function checkFiles() {
+            const container = document.getElementById('file-checks');
+            container.innerHTML = '';
+
+            for (const file of modelFiles) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    const div = document.createElement('div');
+                    div.className = response.ok ? 'file-check success' : 'file-check error';
+                    
+                    if (response.ok) {
+                        const size = response.headers.get('content-length');
+                        div.innerHTML = `✅ ${file} - 状态: ${response.status}, 大小: ${size ? (parseInt(size) / 1024 / 1024).toFixed(2) + ' MB' : '未知'}`;
+                        testResults.fileSuccess++;
+                    } else {
+                        div.innerHTML = `❌ ${file} - 状态: ${response.status}`;
+                        testResults.fileError++;
+                    }
+                    
+                    container.appendChild(div);
+                } catch (error) {
+                    const div = document.createElement('div');
+                    div.className = 'file-check error';
+                    div.innerHTML = `❌ ${file} - 错误: ${error.message}`;
+                    container.appendChild(div);
+                    testResults.fileError++;
+                }
+            }
+
+            updateResults();
+        }
+
+        // 设置模型加载事件监听器
+        function setupModelListeners() {
+            const models = ['bommieBoy', 'bommieGirl', 'bommie'];
+            
+            models.forEach(modelName => {
+                const viewer = document.getElementById(`${modelName}-viewer`);
+                const status = document.getElementById(`${modelName}-status`);
+                const container = document.getElementById(`${modelName}-test`);
+                
+                viewer.addEventListener('load', () => {
+                    status.textContent = '✅ 加载成功';
+                    status.className = 'status success';
+                    container.className = 'model-test success';
+                    testResults.modelSuccess++;
+                    updateResults();
+                });
+                
+                viewer.addEventListener('error', (event) => {
+                    status.textContent = '❌ 加载失败';
+                    status.className = 'status error';
+                    container.className = 'model-test error';
+                    testResults.modelError++;
+                    updateResults();
+                    console.error(`Model ${modelName} failed to load:`, event);
+                });
+            });
+        }
+
+        function updateResults() {
+            const container = document.getElementById('results');
+            container.innerHTML = `
+                <p><strong>文件检查:</strong> 成功 ${testResults.fileSuccess}, 失败 ${testResults.fileError}</p>
+                <p><strong>模型加载:</strong> 成功 ${testResults.modelSuccess}, 失败 ${testResults.modelError}</p>
+            `;
+
+            updateSolutions();
+        }
+
+        function updateSolutions() {
+            const container = document.getElementById('solutions');
+            
+            if (testResults.fileError > 0) {
+                container.innerHTML = `
+                    <div class="file-check error">
+                        <h4>❌ 模型文件缺失</h4>
+                        <p>有 ${testResults.fileError} 个模型文件无法访问。</p>
+                        <p><strong>解决方案:</strong></p>
+                        <ol>
+                            <li>确保所有 .glb 文件都已上传到GitHub仓库</li>
+                            <li>检查文件大小是否超过GitHub限制 (100MB)</li>
+                            <li>确保文件路径正确: assets/assets/models/</li>
+                            <li>等待GitHub Pages更新 (5-10分钟)</li>
+                            <li>如果文件过大，考虑使用Git LFS</li>
+                        </ol>
+                    </div>
+                `;
+            } else if (testResults.modelError > 0) {
+                container.innerHTML = `
+                    <div class="file-check error">
+                        <h4>⚠️ 模型加载失败</h4>
+                        <p>文件存在但模型无法正确加载。</p>
+                        <p><strong>可能原因:</strong></p>
+                        <ul>
+                            <li>GLB文件损坏</li>
+                            <li>浏览器不支持WebGL</li>
+                            <li>model-viewer库加载失败</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (testResults.fileSuccess > 0 && testResults.modelSuccess > 0) {
+                container.innerHTML = `
+                    <div class="file-check success">
+                        <h4>🎉 所有模型测试通过！</h4>
+                        <p>所有3D模型文件都能正常访问和加载。</p>
+                        <p>如果主应用中仍然有问题，可能是代码中的路径配置问题。</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载完成后开始测试
+        window.addEventListener('load', () => {
+            setupModelListeners();
+            checkFiles();
+            
+            // 10秒后检查模型加载状态
+            setTimeout(() => {
+                const loadingStatuses = document.querySelectorAll('.status.loading');
+                loadingStatuses.forEach(status => {
+                    if (status.className.includes('loading')) {
+                        status.textContent = '⏰ 加载超时';
+                        status.className = 'status error';
+                        testResults.modelError++;
+                    }
+                });
+                updateResults();
+            }, 10000);
+        });
+    </script>
+</body>
+</html>
