@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beacon World App - 图片路径检查工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .image-test {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #ddd;
+            transition: border-color 0.3s;
+        }
+        .image-test.success {
+            border-color: #28a745;
+        }
+        .image-test.error {
+            border-color: #dc3545;
+        }
+        .image-test img {
+            max-width: 100%;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .image-test .path {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .image-test .status {
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        .image-test.success .status {
+            color: #28a745;
+        }
+        .image-test.error .status {
+            color: #dc3545;
+        }
+        .summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            display: inline-block;
+            margin: 5px 15px 5px 0;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .summary-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .summary-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .summary-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Beacon World App - 图片路径检查工具</h1>
+        
+        <div class="info-box">
+            <h4>📍 当前页面信息</h4>
+            <p><strong>页面URL:</strong> <span id="page-url"></span></p>
+            <p><strong>Base URL:</strong> <span id="base-url"></span></p>
+            <p><strong>协议:</strong> <span id="protocol"></span></p>
+        </div>
+
+        <div class="summary" id="summary">
+            <h4>📊 检查结果统计</h4>
+            <span class="summary-item summary-loading">正在检查...</span>
+        </div>
+
+        <div class="section">
+            <h3>🎯 事件图片 (Banner)</h3>
+            <p>这些图片用于主页横幅显示</p>
+            <div class="image-grid" id="event-images"></div>
+        </div>
+
+        <div class="section">
+            <h3>👤 头像图片</h3>
+            <p>用户头像和默认头像</p>
+            <div class="image-grid" id="avatar-images"></div>
+        </div>
+
+        <div class="section">
+            <h3>🎮 游戏资源图片</h3>
+            <p>抓娃娃机和游戏相关图片</p>
+            <div class="image-grid" id="game-images"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 解决方案</h3>
+            <div id="solutions"></div>
+            <button onclick="checkAllImages()">🔄 重新检查所有图片</button>
+            <button onclick="clearCache()">🗑️ 清除缓存并重新检查</button>
+        </div>
+    </div>
+
+    <script>
+        // 图片路径配置
+        const imageTests = {
+            events: [
+                'assets/assets/images/events/event1.png',
+                'assets/assets/images/events/event2.png',
+                'assets/assets/images/events/event3.png'
+            ],
+            avatars: [
+                'assets/assets/images/avatars/1.png',
+                'assets/assets/images/avatars/2.png',
+                'assets/assets/images/avatars/3.png',
+                'assets/assets/images/avatars/user_avatar.png',
+                'assets/assets/images/avatars/whd.png'
+            ],
+            games: [
+                'assets/assets/images/figurine.png',
+                'assets/assets/images/neon_claw.png',
+                'assets/assets/images/machine_bg.png',
+                'assets/assets/images/free_box.png',
+                'assets/assets/images/premium_box.png',
+                'assets/assets/images/keychain.png',
+                'assets/assets/images/stickers.png'
+            ]
+        };
+
+        let testResults = {
+            success: 0,
+            error: 0,
+            loading: 0
+        };
+
+        function updatePageInfo() {
+            document.getElementById('page-url').textContent = window.location.href;
+            document.getElementById('base-url').textContent = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+            document.getElementById('protocol').textContent = window.location.protocol;
+        }
+
+        function createImageTest(imagePath, category) {
+            const div = document.createElement('div');
+            div.className = 'image-test';
+            div.innerHTML = `
+                <img src="${imagePath}" alt="${imagePath}" onload="onImageLoad(this)" onerror="onImageError(this)">
+                <div class="path">${imagePath}</div>
+                <div class="status">加载中...</div>
+            `;
+            return div;
+        }
+
+        function onImageLoad(img) {
+            const container = img.parentElement;
+            container.className = 'image-test success';
+            container.querySelector('.status').textContent = '✅ 加载成功';
+            testResults.loading--;
+            testResults.success++;
+            updateSummary();
+        }
+
+        function onImageError(img) {
+            const container = img.parentElement;
+            container.className = 'image-test error';
+            container.querySelector('.status').textContent = '❌ 加载失败';
+            testResults.loading--;
+            testResults.error++;
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryEl = document.getElementById('summary');
+            summaryEl.innerHTML = `
+                <h4>📊 检查结果统计</h4>
+                <span class="summary-item summary-success">成功: ${testResults.success}</span>
+                <span class="summary-item summary-error">失败: ${testResults.error}</span>
+                <span class="summary-item summary-loading">加载中: ${testResults.loading}</span>
+            `;
+
+            // 更新解决方案
+            updateSolutions();
+        }
+
+        function updateSolutions() {
+            const solutionsEl = document.getElementById('solutions');
+            
+            if (testResults.error === 0 && testResults.loading === 0) {
+                solutionsEl.innerHTML = `
+                    <div class="info-box">
+                        <h4>🎉 所有图片加载成功！</h4>
+                        <p>您的图片路径配置正确，应用应该能正常显示图片。</p>
+                    </div>
+                `;
+            } else if (testResults.error > 0) {
+                solutionsEl.innerHTML = `
+                    <div class="error-box">
+                        <h4>❌ 发现图片加载问题</h4>
+                        <p>有 ${testResults.error} 张图片加载失败。可能的原因和解决方案：</p>
+                        <ol>
+                            <li><strong>文件未上传：</strong>确保所有图片文件都已上传到GitHub仓库</li>
+                            <li><strong>路径错误：</strong>检查文件路径是否正确，注意大小写</li>
+                            <li><strong>GitHub Pages未更新：</strong>等待5-10分钟让GitHub Pages更新</li>
+                            <li><strong>缓存问题：</strong>清除浏览器缓存或使用无痕模式</li>
+                            <li><strong>文件格式：</strong>确保图片文件格式正确（PNG/JPG）</li>
+                        </ol>
+                    </div>
+                `;
+            }
+        }
+
+        function checkAllImages() {
+            // 重置统计
+            testResults = { success: 0, error: 0, loading: 0 };
+            
+            // 清空现有内容
+            document.getElementById('event-images').innerHTML = '';
+            document.getElementById('avatar-images').innerHTML = '';
+            document.getElementById('game-images').innerHTML = '';
+            
+            // 重新加载所有图片
+            loadImages();
+        }
+
+        function clearCache() {
+            // 添加时间戳清除缓存
+            const timestamp = Date.now();
+            
+            // 重置统计
+            testResults = { success: 0, error: 0, loading: 0 };
+            
+            // 清空现有内容
+            document.getElementById('event-images').innerHTML = '';
+            document.getElementById('avatar-images').innerHTML = '';
+            document.getElementById('game-images').innerHTML = '';
+            
+            // 修改图片路径配置，添加时间戳
+            const cachedImageTests = {};
+            for (const [category, paths] of Object.entries(imageTests)) {
+                cachedImageTests[category] = paths.map(path => `${path}?t=${timestamp}`);
+            }
+            
+            // 使用带时间戳的路径加载图片
+            loadImagesWithPaths(cachedImageTests);
+        }
+
+        function loadImages() {
+            loadImagesWithPaths(imageTests);
+        }
+
+        function loadImagesWithPaths(pathsConfig) {
+            for (const [category, paths] of Object.entries(pathsConfig)) {
+                const container = document.getElementById(`${category}-images`);
+                
+                paths.forEach(imagePath => {
+                    testResults.loading++;
+                    const imageTest = createImageTest(imagePath, category);
+                    container.appendChild(imageTest);
+                });
+            }
+            
+            updateSummary();
+        }
+
+        // 初始化
+        window.addEventListener('load', () => {
+            updatePageInfo();
+            loadImages();
+            
+            // 5秒后检查是否还有加载中的图片
+            setTimeout(() => {
+                if (testResults.loading > 0) {
+                    console.warn(`还有 ${testResults.loading} 张图片正在加载`);
+                }
+            }, 5000);
+        });
+
+        // 监听错误
+        window.addEventListener('error', (e) => {
+            console.error('页面错误:', e.error);
+        });
+    </script>
+</body>
+</html>

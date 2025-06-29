@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <!-- GitHub Pages 优化版本 -->
+  <base href="./">
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Beacon World App - 现代化社交学习应用">
+  <meta name="keywords" content="学习,社交,应用,Flutter,Web">
+  <meta name="author" content="Beacon World Team">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Beacon World App">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!-- Open Graph meta tags -->
+  <meta property="og:title" content="Beacon World App">
+  <meta property="og:description" content="现代化社交学习应用">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="icons/Icon-512.png">
+
+  <!-- 使用HTTPS加载model-viewer脚本 -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
+
+  <title>Beacon World App - 现代化社交学习应用</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <style>
+    /* GitHub Pages 优化样式 */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .loading-content {
+      text-align: center;
+      max-width: 400px;
+      padding: 2rem;
+    }
+    
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 30px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 24px;
+      margin-bottom: 15px;
+      font-weight: 300;
+    }
+    
+    .loading-subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+    
+    .loading-status {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+    
+    .loading-progress {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    
+    .loading-progress-bar {
+      height: 100%;
+      background: white;
+      border-radius: 2px;
+      width: 0%;
+      animation: progress 3s ease-in-out infinite;
+    }
+    
+    @keyframes progress {
+      0% { width: 0%; }
+      50% { width: 70%; }
+      100% { width: 100%; }
+    }
+    
+    .error-container {
+      display: none;
+      text-align: center;
+      color: white;
+      max-width: 600px;
+      padding: 2rem;
+    }
+    
+    .error-title {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #ff6b6b;
+    }
+    
+    .error-message {
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 25px;
+      border: 2px solid rgba(255,255,255,0.3);
+      margin: 0 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .button:hover {
+      background: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.5);
+    }
+    
+    #flutter-app {
+      width: 100vw;
+      height: 100vh;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载界面 -->
+  <div id="loading" class="loading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">🌟 Beacon World App</div>
+      <div class="loading-subtitle">正在加载应用...</div>
+      <div id="loading-status" class="loading-status">初始化中...</div>
+      <div class="loading-progress">
+        <div class="loading-progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 错误界面 -->
+  <div id="error" class="error-container">
+    <h2 class="error-title">❌ 应用加载失败</h2>
+    <p class="error-message" id="error-message">
+      应用加载遇到问题，请稍后重试。
+    </p>
+    <a href="图片测试页面.html" class="button">🖼️ 图片测试</a>
+    <a href="诊断工具.html" class="button">🔧 诊断工具</a>
+    <a href="javascript:location.reload()" class="button">🔄 重新加载</a>
+  </div>
+
+  <!-- Flutter应用容器 -->
+  <div id="flutter-app"></div>
+
+  <script>
+    let loadingTimeout;
+    let errorShown = false;
+    let loadingSteps = [
+      '检查浏览器环境...',
+      '加载Flutter引擎...',
+      '初始化渲染器...',
+      '加载应用资源...',
+      '启动应用...'
+    ];
+    let currentStep = 0;
+
+    function updateStatus(message) {
+      const statusEl = document.getElementById('loading-status');
+      if (statusEl) {
+        statusEl.textContent = message;
+      }
+      console.log('Loading status:', message);
+    }
+
+    function nextStep() {
+      if (currentStep < loadingSteps.length) {
+        updateStatus(loadingSteps[currentStep]);
+        currentStep++;
+        setTimeout(nextStep, 800);
+      }
+    }
+
+    function showError(message = '应用加载失败，请检查网络连接或刷新页面重试。') {
+      if (errorShown) return;
+      errorShown = true;
+      
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'flex';
+      document.getElementById('error-message').textContent = message;
+      console.error('Application failed to load:', message);
+    }
+
+    function showApp() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('flutter-app').style.display = 'block';
+      console.log('Application loaded successfully');
+    }
+
+    // 开始加载步骤
+    nextStep();
+
+    // 检查基本环境
+    if (typeof WebAssembly === 'undefined') {
+      showError('您的浏览器不支持WebAssembly，请使用现代浏览器访问。');
+    } else if (typeof fetch === 'undefined') {
+      showError('您的浏览器不支持Fetch API，请更新浏览器。');
+    } else {
+      // 设置超时
+      loadingTimeout = setTimeout(() => {
+        showError('应用加载超时，可能是网络问题。请检查网络连接或稍后重试。');
+      }, 30000);
+
+      // 监听Flutter加载事件
+      window.addEventListener('flutter-first-frame', function() {
+        clearTimeout(loadingTimeout);
+        updateStatus('应用加载完成！');
+        setTimeout(showApp, 500);
+      });
+
+      // 加载Flutter
+      try {
+        // 检查关键文件
+        Promise.all([
+          fetch('main.dart.js', { method: 'HEAD' }),
+          fetch('flutter_bootstrap.js', { method: 'HEAD' }),
+          fetch('assets/AssetManifest.json', { method: 'HEAD' })
+        ]).then(responses => {
+          const failedFiles = [];
+          responses.forEach((response, index) => {
+            const files = ['main.dart.js', 'flutter_bootstrap.js', 'assets/AssetManifest.json'];
+            if (!response.ok) {
+              failedFiles.push(files[index]);
+            }
+          });
+          
+          if (failedFiles.length > 0) {
+            showError(`关键文件加载失败: ${failedFiles.join(', ')}。请检查文件是否正确上传。`);
+            return;
+          }
+          
+          // 动态加载Flutter bootstrap
+          const script = document.createElement('script');
+          script.src = 'flutter_bootstrap.js';
+          script.async = true;
+          script.onerror = () => {
+            showError('Flutter引擎加载失败，请刷新页面重试。');
+          };
+          document.head.appendChild(script);
+          
+        }).catch(error => {
+          showError('文件检查失败，请检查网络连接。');
+        });
+          
+      } catch (error) {
+        showError('应用初始化失败: ' + error.message);
+      }
+    }
+
+    // 全局错误处理
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error);
+      if (!errorShown) {
+        showError('发生JavaScript错误: ' + (e.error?.message || e.message));
+      }
+    });
+
+    // 未处理的Promise错误
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error('Unhandled promise rejection:', e.reason);
+      if (!errorShown) {
+        showError('发生异步错误: ' + e.reason);
+      }
+    });
+
+    // GitHub Pages 特定优化
+    if (window.location.hostname.includes('github.io')) {
+      console.log('GitHub Pages environment detected');
+      
+      // 添加GitHub Pages特定的错误处理
+      setTimeout(() => {
+        if (!errorShown && document.getElementById('loading').style.display !== 'none') {
+          updateStatus('GitHub Pages首次加载可能较慢，请耐心等待...');
+        }
+      }, 10000);
+    }
+  </script>
+</body>
+</html>
