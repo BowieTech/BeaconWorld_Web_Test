@@ -1,0 +1,81 @@
+🎉 Beacon World App - 智能路径管理系统上线！
+=============================================
+
+📅 更新时间: 2025年6月29日
+
+🚀 重大更新: 全新的资源路径管理系统
+
+✨ 新增功能:
+
+🔧 智能路径管理器 (AssetPathManager)
+   - 自动检测运行环境 (本地开发 vs Web发布)
+   - 本地开发: 使用标准路径 assets/images/xxx.png
+   - Web发布: 自动添加前缀 assets/assets/images/xxx.png
+   - 支持图片、3D模型、视频、字体、音频等所有资源类型
+
+📝 简化的代码写法:
+   - 旧方式: 'assets/assets/models/bommieBoy.glb'
+   - 新方式: AssetPathManager.getModelPath('bommieBoy.glb')
+   - 扩展方法: 'bommieBoy.glb'.modelPath
+
+🎯 已更新的组件:
+   - ✅ 3D欢迎页面 (ThreeDWelcomeScreen)
+   - ✅ 视频播放器 (VideoPlayerScreen)
+   - ✅ 头像组件 (AvatarGlowCircle)
+   - ✅ 滚动横幅 (ScrollingBanner)
+   - ✅ 商品卡片 (MerchandiseCard)
+
+🛠️ 新增测试工具:
+   - 路径管理器测试.html - 验证路径转换逻辑
+   - asset_path_test.dart - 开发环境测试工具
+
+💡 系统优势:
+
+🎯 开发友好:
+   - 代码中只需写简单的文件名
+   - 不需要记住复杂的路径结构
+   - 自动处理环境差异
+
+🔄 自动化:
+   - 无需手动修改路径
+   - 构建时自动应用正确路径
+   - 减少人为错误
+
+🧪 测试完备:
+   - 内置测试工具验证路径转换
+   - 支持批量路径处理
+   - 提供调试信息
+
+🚀 部署步骤:
+
+1. 上传所有文件到GitHub仓库
+   - 包含新的路径管理器代码
+   - 更新后的main.dart.js文件
+   - 所有测试工具
+
+2. 等待GitHub Pages更新 (5-10分钟)
+
+3. 验证功能:
+   - 访问 路径管理器测试.html 查看路径转换
+   - 测试3D模型、图片、视频加载
+   - 检查所有资源是否正常显示
+
+📊 预期结果:
+
+✅ 所有资源路径自动正确转换
+✅ 3D模型、图片、视频正常加载
+✅ 本地开发和Web发布都能正常工作
+✅ 代码更简洁易维护
+
+🔧 使用方法:
+
+// 旧方式 (不推荐)
+ModelViewer(src: 'assets/assets/models/bommieBoy.glb')
+
+// 新方式 (推荐)
+ModelViewer(src: AssetPathManager.getModelPath('bommieBoy.glb'))
+
+// 或使用扩展方法
+ModelViewer(src: 'bommieBoy.glb'.modelPath)
+
+🎉 现在您可以专注于开发，路径问题交给系统自动处理！

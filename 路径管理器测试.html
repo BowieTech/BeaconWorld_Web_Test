@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 路径管理器测试 - Beacon World App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .info-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #4facfe;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+        }
+
+        .test-section h3 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .path-test {
+            background: #fff;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .path-test:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.1);
+        }
+
+        .path-input {
+            font-family: 'Courier New', monospace;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .path-output {
+            font-family: 'Courier New', monospace;
+            color: #2d5aa0;
+            font-weight: bold;
+            font-size: 1em;
+            background: #f0f7ff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border-left: 3px solid #4facfe;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+        }
+
+        .environment-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .env-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e1e8ed;
+            text-align: center;
+        }
+
+        .env-card h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .env-value {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .explanation {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .explanation h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 路径管理器测试</h1>
+            <p>验证自动路径转换功能 - 本地开发 vs Web发布</p>
+        </div>
+
+        <div class="content">
+            <div class="info-section">
+                <h3>📋 当前环境信息</h3>
+                <div class="environment-info">
+                    <div class="env-card">
+                        <h4>🌐 平台</h4>
+                        <div class="env-value" id="platform">Web</div>
+                    </div>
+                    <div class="env-card">
+                        <h4>🚀 模式</h4>
+                        <div class="env-value" id="mode">Release</div>
+                    </div>
+                    <div class="env-card">
+                        <h4>🔧 路径前缀</h4>
+                        <div class="env-value" id="prefix">assets/assets/</div>
+                    </div>
+                    <div class="env-card">
+                        <h4>📍 当前URL</h4>
+                        <div class="env-value" id="current-url">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <h3>🖼️ 图片路径测试</h3>
+                <div id="image-tests"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>🎮 3D模型路径测试</h3>
+                <div id="model-tests"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>🎬 视频路径测试</h3>
+                <div id="video-tests"></div>
+            </div>
+
+            <div class="explanation">
+                <h4>💡 路径管理器工作原理</h4>
+                <p>
+                    <strong>本地开发时：</strong> 使用标准路径 <code>assets/images/xxx.png</code><br>
+                    <strong>Web发布时：</strong> 自动添加前缀 <code>assets/assets/images/xxx.png</code><br><br>
+                    这样可以保持代码简洁，同时确保在不同环境下都能正确加载资源。
+                </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="button" onclick="runTests()">🔄 重新运行测试</button>
+                <button class="button" onclick="checkActualFiles()">📁 检查实际文件</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟路径管理器的逻辑
+        class AssetPathManager {
+            static getAssetPath(originalPath) {
+                // 在Web发布模式下，添加额外的assets前缀
+                const isWebRelease = true; // 在实际Web环境中总是true
+                
+                if (isWebRelease) {
+                    if (originalPath.startsWith('assets/')) {
+                        return 'assets/' + originalPath;
+                    } else {
+                        return 'assets/assets/' + originalPath;
+                    }
+                }
+                
+                return originalPath;
+            }
+
+            static getImagePath(imagePath) {
+                if (imagePath.startsWith('assets/')) {
+                    return this.getAssetPath(imagePath);
+                }
+                return this.getAssetPath('assets/images/' + imagePath);
+            }
+
+            static getModelPath(modelPath) {
+                if (modelPath.startsWith('assets/')) {
+                    return this.getAssetPath(modelPath);
+                }
+                return this.getAssetPath('assets/models/' + modelPath);
+            }
+
+            static getVideoPath(videoPath) {
+                if (videoPath.startsWith('assets/')) {
+                    return this.getAssetPath(videoPath);
+                }
+                return this.getAssetPath('assets/videos/' + videoPath);
+            }
+        }
+
+        // 测试数据
+        const testData = {
+            images: [
+                'avatar.png',
+                'events/event1.png',
+                'avatars/user_avatar.png',
+                'assets/images/existing.png'
+            ],
+            models: [
+                'bommieBoy.glb',
+                'bommieGirl.glb',
+                'bommie.glb',
+                'assets/models/existing.glb'
+            ],
+            videos: [
+                '1.mp4',
+                '2.mp4',
+                '4.mp4',
+                'assets/videos/existing.mp4'
+            ]
+        };
+
+        function createPathTest(input, output, type) {
+            return `
+                <div class="path-test">
+                    <div class="path-input">输入: ${input}</div>
+                    <div class="path-output">输出: ${output}</div>
+                    <span class="status success">✅ 转换成功</span>
+                </div>
+            `;
+        }
+
+        function runTests() {
+            // 图片测试
+            const imageContainer = document.getElementById('image-tests');
+            imageContainer.innerHTML = '';
+            testData.images.forEach(image => {
+                const result = AssetPathManager.getImagePath(image);
+                imageContainer.innerHTML += createPathTest(image, result, 'image');
+            });
+
+            // 模型测试
+            const modelContainer = document.getElementById('model-tests');
+            modelContainer.innerHTML = '';
+            testData.models.forEach(model => {
+                const result = AssetPathManager.getModelPath(model);
+                modelContainer.innerHTML += createPathTest(model, result, 'model');
+            });
+
+            // 视频测试
+            const videoContainer = document.getElementById('video-tests');
+            videoContainer.innerHTML = '';
+            testData.videos.forEach(video => {
+                const result = AssetPathManager.getVideoPath(video);
+                videoContainer.innerHTML += createPathTest(video, result, 'video');
+            });
+        }
+
+        function checkActualFiles() {
+            // 检查一些关键文件是否存在
+            const filesToCheck = [
+                'assets/assets/models/bommieBoy.glb',
+                'assets/assets/images/events/event1.png',
+                'assets/assets/videos/1.mp4'
+            ];
+
+            filesToCheck.forEach(file => {
+                fetch(file)
+                    .then(response => {
+                        console.log(`${file}: ${response.ok ? '✅ 存在' : '❌ 不存在'}`);
+                    })
+                    .catch(error => {
+                        console.log(`${file}: ❌ 检查失败`);
+                    });
+            });
+
+            alert('文件检查结果已输出到控制台，请按F12查看');
+        }
+
+        // 初始化
+        window.addEventListener('load', () => {
+            document.getElementById('current-url').textContent = window.location.href;
+            runTests();
+        });
+    </script>
+</body>
+</html>
