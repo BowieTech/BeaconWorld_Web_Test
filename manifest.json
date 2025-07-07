@@ -1,11 +1,11 @@
 {
-    "name": "my_beacon_app_new",
-    "short_name": "my_beacon_app_new",
+    "name": "Bommie",
+    "short_name": "Bommie",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Bommie - 社交活动平台",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
