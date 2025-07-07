@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages 部署检查工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        .status.success { background: #28a745; }
+        .status.error { background: #dc3545; }
+        .status.warning { background: #ffc107; color: #333; }
+        .status.loading { background: #007bff; }
+        .info {
+            flex: 1;
+        }
+        .info h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        .info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .url-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .url-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .url {
+            font-family: monospace;
+            background: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            word-break: break-all;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .log {
+            background: #343a40;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 GitHub Pages 部署检查工具</h1>
+        
+        <div class="url-info">
+            <h3>📍 当前环境信息</h3>
+            <p><strong>当前URL:</strong> <span class="url" id="current-url"></span></p>
+            <p><strong>检测到的环境:</strong> <span id="environment"></span></p>
+            <p><strong>Base URL:</strong> <span class="url" id="base-url"></span></p>
+        </div>
+
+        <div class="section">
+            <h2>🚀 关键文件检查</h2>
+            <div id="file-checks"></div>
+            <button class="btn" onclick="checkFiles()">重新检查文件</button>
+        </div>
+
+        <div class="section">
+            <h2>🌐 网络连接测试</h2>
+            <div id="network-checks"></div>
+            <button class="btn" onclick="checkNetwork()">测试网络连接</button>
+        </div>
+
+        <div class="section">
+            <h2>📱 Flutter 应用状态</h2>
+            <div id="flutter-checks"></div>
+            <button class="btn" onclick="checkFlutter()">检查 Flutter 状态</button>
+        </div>
+
+        <div class="section">
+            <h2>📋 部署建议</h2>
+            <div id="suggestions"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 调试日志</h2>
+            <div class="log" id="debug-log"></div>
+            <button class="btn" onclick="clearLog()">清空日志</button>
+        </div>
+    </div>
+
+    <script>
+        let debugLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            debugLog.push(logEntry);
+            updateLogDisplay();
+            console.log(logEntry);
+        }
+
+        function updateLogDisplay() {
+            document.getElementById('debug-log').innerHTML = debugLog.join('\n');
+            document.getElementById('debug-log').scrollTop = document.getElementById('debug-log').scrollHeight;
+        }
+
+        function clearLog() {
+            debugLog = [];
+            updateLogDisplay();
+        }
+
+        function createCheckItem(title, description, status, details = '') {
+            const statusIcon = {
+                'success': '✓',
+                'error': '✗',
+                'warning': '!',
+                'loading': '⟳'
+            };
+
+            return `
+                <div class="check-item">
+                    <div class="status ${status}">${statusIcon[status]}</div>
+                    <div class="info">
+                        <h3>${title}</h3>
+                        <p>${description}</p>
+                        ${details ? `<small style="color: #999;">${details}</small>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function detectEnvironment() {
+            const hostname = window.location.hostname;
+            const pathname = window.location.pathname;
+            
+            log(`检测环境: hostname=${hostname}, pathname=${pathname}`);
+            
+            let environment = '未知环境';
+            let baseUrl = window.location.origin;
+            
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                environment = '本地开发环境';
+            } else if (hostname.includes('github.io')) {
+                environment = 'GitHub Pages';
+                const pathSegments = pathname.split('/').filter(s => s);
+                if (pathSegments.length > 0) {
+                    baseUrl += '/' + pathSegments[0];
+                }
+            } else if (hostname.includes('netlify') || hostname.includes('vercel')) {
+                environment = '第三方托管平台';
+            }
+            
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('environment').textContent = environment;
+            document.getElementById('base-url').textContent = baseUrl;
+            
+            return { environment, baseUrl };
+        }
+
+        async function checkFiles() {
+            log('开始检查关键文件...');
+            const container = document.getElementById('file-checks');
+            container.innerHTML = '';
+            
+            const criticalFiles = [
+                { name: 'flutter_bootstrap.js', description: 'Flutter 启动脚本' },
+                { name: 'main.dart.js', description: '应用主代码' },
+                { name: 'manifest.json', description: 'PWA 配置文件' },
+                { name: 'canvaskit/canvaskit.js', description: 'CanvasKit 渲染引擎' },
+                { name: 'assets/AssetManifest.json', description: '资源清单文件' }
+            ];
+            
+            for (const file of criticalFiles) {
+                container.innerHTML += createCheckItem(
+                    file.name,
+                    file.description,
+                    'loading',
+                    '检查中...'
+                );
+            }
+            
+            for (let i = 0; i < criticalFiles.length; i++) {
+                const file = criticalFiles[i];
+                try {
+                    const response = await fetch(file.name, { method: 'HEAD' });
+                    const status = response.ok ? 'success' : 'error';
+                    const details = response.ok ? 
+                        `文件存在 (${response.status})` : 
+                        `文件不存在 (${response.status})`;
+                    
+                    log(`文件检查 ${file.name}: ${details}`);
+                    
+                    container.children[i].innerHTML = createCheckItem(
+                        file.name,
+                        file.description,
+                        status,
+                        details
+                    ).replace('<div class="check-item">', '').replace('</div>', '');
+                } catch (error) {
+                    log(`文件检查 ${file.name} 失败: ${error.message}`, 'error');
+                    container.children[i].innerHTML = createCheckItem(
+                        file.name,
+                        file.description,
+                        'error',
+                        `检查失败: ${error.message}`
+                    ).replace('<div class="check-item">', '').replace('</div>', '');
+                }
+            }
+        }
+
+        async function checkNetwork() {
+            log('开始网络连接测试...');
+            const container = document.getElementById('network-checks');
+            container.innerHTML = '';
+            
+            const tests = [
+                { name: 'Google CDN', url: 'https://www.gstatic.com/flutter-canvaskit/', description: 'CanvasKit CDN 连接' },
+                { name: 'Model Viewer CDN', url: 'https://unpkg.com/@google/model-viewer/', description: '3D 模型查看器 CDN' }
+            ];
+            
+            for (const test of tests) {
+                container.innerHTML += createCheckItem(
+                    test.name,
+                    test.description,
+                    'loading',
+                    '测试中...'
+                );
+            }
+            
+            for (let i = 0; i < tests.length; i++) {
+                const test = tests[i];
+                try {
+                    const response = await fetch(test.url, { method: 'HEAD', mode: 'no-cors' });
+                    const status = 'success'; // no-cors 模式下无法获取真实状态
+                    const details = 'CDN 连接正常';
+                    
+                    log(`网络测试 ${test.name}: ${details}`);
+                    
+                    container.children[i].innerHTML = createCheckItem(
+                        test.name,
+                        test.description,
+                        status,
+                        details
+                    ).replace('<div class="check-item">', '').replace('</div>', '');
+                } catch (error) {
+                    log(`网络测试 ${test.name} 失败: ${error.message}`, 'error');
+                    container.children[i].innerHTML = createCheckItem(
+                        test.name,
+                        test.description,
+                        'warning',
+                        `连接可能有问题: ${error.message}`
+                    ).replace('<div class="check-item">', '').replace('</div>', '');
+                }
+            }
+        }
+
+        function checkFlutter() {
+            log('检查 Flutter 应用状态...');
+            const container = document.getElementById('flutter-checks');
+            container.innerHTML = '';
+            
+            const checks = [
+                {
+                    name: 'Flutter 引擎',
+                    test: () => typeof window._flutter !== 'undefined',
+                    description: 'Flutter 引擎是否已加载'
+                },
+                {
+                    name: 'CanvasKit',
+                    test: () => typeof window.flutterCanvasKit !== 'undefined',
+                    description: 'CanvasKit 渲染引擎状态'
+                },
+                {
+                    name: 'Service Worker',
+                    test: () => 'serviceWorker' in navigator,
+                    description: 'Service Worker 支持'
+                },
+                {
+                    name: 'WebAssembly',
+                    test: () => typeof WebAssembly !== 'undefined',
+                    description: 'WebAssembly 支持'
+                }
+            ];
+            
+            checks.forEach(check => {
+                const result = check.test();
+                const status = result ? 'success' : 'error';
+                const details = result ? '支持/已加载' : '不支持/未加载';
+                
+                log(`Flutter 检查 ${check.name}: ${details}`);
+                
+                container.innerHTML += createCheckItem(
+                    check.name,
+                    check.description,
+                    status,
+                    details
+                );
+            });
+        }
+
+        function generateSuggestions() {
+            const container = document.getElementById('suggestions');
+            const { environment } = detectEnvironment();
+            
+            let suggestions = [];
+            
+            if (environment === 'GitHub Pages') {
+                suggestions = [
+                    '✅ 确保仓库设置中 GitHub Pages 已启用',
+                    '✅ 检查 .nojekyll 文件是否存在',
+                    '✅ 等待 5-10 分钟让部署生效',
+                    '✅ 清除浏览器缓存后重试',
+                    '✅ 检查 Actions 标签页的部署状态'
+                ];
+            } else if (environment === '本地开发环境') {
+                suggestions = [
+                    '🔧 使用 flutter build web --release 构建生产版本',
+                    '🔧 确保所有资源文件路径正确',
+                    '🔧 测试完成后部署到 GitHub Pages'
+                ];
+            } else {
+                suggestions = [
+                    '❓ 未识别的环境，请检查部署配置',
+                    '❓ 确保所有文件都已正确上传',
+                    '❓ 检查服务器配置是否支持 SPA'
+                ];
+            }
+            
+            container.innerHTML = suggestions.map(s => `<p>${s}</p>`).join('');
+        }
+
+        // 页面加载时执行
+        window.addEventListener('load', function() {
+            log('GitHub Pages 检查工具已启动');
+            detectEnvironment();
+            checkFiles();
+            checkNetwork();
+            checkFlutter();
+            generateSuggestions();
+        });
+    </script>
+</body>
+</html>
