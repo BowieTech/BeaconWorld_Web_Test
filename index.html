@@ -1,7 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <base href="/">
+  <!-- 动态设置base href for GitHub Pages -->
+  <script>
+    (function() {
+      const path = window.location.pathname;
+      const pathSegments = path.split('/').filter(segment => segment);
+
+      // 检测GitHub Pages环境
+      const isGitHubPages = window.location.hostname.includes('github.io');
+
+      if (isGitHubPages && pathSegments.length > 0) {
+        // GitHub Pages项目页面
+        const basePath = '/' + pathSegments[0] + '/';
+        document.write('<base href="' + basePath + '">');
+        console.log('GitHub Pages detected, base href set to:', basePath);
+      } else {
+        // 本地或根域名
+        document.write('<base href="/">');
+        console.log('Local or root domain, base href set to: /');
+      }
+    })();
+  </script>
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">

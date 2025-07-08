@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <!-- GitHub Pages 专用修复版本 -->
+  <script>
+    // 立即执行，在其他资源加载前设置正确的base href
+    (function() {
+      const hostname = window.location.hostname;
+      const pathname = window.location.pathname;
+      const pathSegments = pathname.split('/').filter(segment => segment);
+      
+      let basePath = '/';
+      
+      // 检测GitHub Pages环境
+      if (hostname.includes('github.io')) {
+        if (pathSegments.length > 0) {
+          // GitHub Pages项目页面: username.github.io/repository-name/
+          basePath = '/' + pathSegments[0] + '/';
+        }
+        // 如果是用户页面 (username.github.io)，保持 basePath = '/'
+      }
+      
+      // 创建并插入base元素
+      const base = document.createElement('base');
+      base.href = basePath;
+      document.head.appendChild(base);
+      
+      console.log('Environment detected:', hostname);
+      console.log('Base href set to:', basePath);
+      console.log('Full URL will be:', window.location.origin + basePath);
+    })();
+  </script>
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Beacon World App - 现代化社交学习应用">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Beacon World App">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!-- 使用HTTPS加载model-viewer脚本 -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
+
+  <title>Beacon World App - 现代化社交学习应用</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* 加载动画 */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    
+    .loading-progress {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    /* 隐藏加载完成后的容器 */
+    .loading-container.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载指示器 -->
+  <div id="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Beacon World App</div>
+    <div class="loading-progress">正在加载应用...</div>
+  </div>
+
+  <!-- Flutter应用容器 -->
+  <div id="app-container" style="display: none;"></div>
+
+  <script>
+    // 加载状态管理
+    let loadingTimeout;
+    
+    // 显示加载进度
+    function updateLoadingProgress(message) {
+      const progressElement = document.querySelector('.loading-progress');
+      if (progressElement) {
+        progressElement.textContent = message;
+      }
+      console.log('Loading:', message);
+    }
+    
+    // 隐藏加载界面
+    function hideLoading() {
+      const loadingElement = document.getElementById('loading');
+      const appContainer = document.getElementById('app-container');
+      
+      if (loadingElement) {
+        loadingElement.classList.add('hidden');
+      }
+      if (appContainer) {
+        appContainer.style.display = 'block';
+      }
+      
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    }
+    
+    // 设置超时提醒
+    loadingTimeout = setTimeout(() => {
+      updateLoadingProgress('加载时间较长，请检查网络连接...');
+      
+      setTimeout(() => {
+        updateLoadingProgress('如果持续无法加载，请刷新页面重试');
+      }, 5000);
+    }, 10000);
+    
+    // 监听Flutter应用加载完成
+    window.addEventListener('flutter-first-frame', () => {
+      updateLoadingProgress('应用加载完成！');
+      setTimeout(hideLoading, 500);
+    });
+    
+    // 错误处理
+    window.addEventListener('error', (event) => {
+      console.error('加载错误:', event.error);
+      updateLoadingProgress('加载出现问题，正在重试...');
+    });
+    
+    // 开始加载Flutter应用
+    updateLoadingProgress('正在初始化...');
+  </script>
+
+  <!-- Flutter Bootstrap -->
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <script>
+    // 额外的调试信息
+    console.log('=== Beacon World App Debug Info ===');
+    console.log('Current URL:', window.location.href);
+    console.log('Base URL:', document.querySelector('base')?.href || 'Not set');
+    console.log('Is GitHub Pages:', window.location.hostname.includes('github.io'));
+    console.log('=====================================');
+  </script>
+</body>
+</html>
