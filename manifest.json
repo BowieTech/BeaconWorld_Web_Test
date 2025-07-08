@@ -1,20 +1,13 @@
 {
-    "name": "Beacon World App",
-    "short_name": "BeaconWorld",
-    "start_url": "./",
+    "name": "Bommie",
+    "short_name": "Bommie",
+    "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Beacon World App - 现代化社交学习应用",
+    "description": "Bommie - 社交活动平台",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
-    "scope": "./",
-    "lang": "zh-CN",
-    "categories": [
-        "education",
-        "social",
-        "lifestyle"
-    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",
