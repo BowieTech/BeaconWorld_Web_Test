@@ -5,20 +5,23 @@ This project demonstrates a one-way integration from **Cin7 Omni** (the client's
 ---
 # Interpretation of Client Requirements
 
-The client expects a lightweight integration that:
 
-1. **Automatically sends basic sales order data** from Cin7 to their 3PL partner (Extensiv).
-2. Ensures the 3PL can **fulfill the order** with sufficient product, delivery, and routing details.
-3. Is designed to **run on-demand** (i.e., upon execution of the console app).
-4. Handles **errors gracefully** and provides debug logs.
+The client expects a lightweight, one-way integration that:
 
-From this, I infer that the integration must:
+- **Transfers sales order data** from Cin7 Omni to their 3PL provider (Extensiv).
+- Ensures that Extensiv has all the required details to **accurately fulfill the order**, including items, routing, and destination.
+- Is **triggered manually** (e.g., via a console application), rather than running continuously or on a fixed schedule.
+- Can **handle errors gracefully**, log them for troubleshooting, and continue processing other orders if possible.
 
-- Extract all necessary sales order details from Cin7's API (`GET /SalesOrders/{id}`).
-- Transform them into the expected structure for Extensiv's `POST /orders` API.
-- Include the **line items**, **ship-to address**, **carrier info**, and **order reference**.
-- Handle missing or malformed data without crashing the app.
+---
 
+### Based on these expectations, I designed the solution to:
+
+- **Query orders modified on the previous day**, assuming that newly created or recently updated orders are ready for 3PL sync.
+- Use the `GET /SalesOrders?where=...` Cin7 API endpoint to retrieve multiple orders in a paginated fashion.
+- Map the order data into the required Extensiv format via an adapter class.
+- Include **line items, shipping address, billing info, and carrier routing instructions** in the transformation.
+- Log errors clearly and continue processing other records if individual orders fail validation or API submission.
 ---
 ## API Documentation References
 
