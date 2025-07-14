@@ -5,23 +5,35 @@ This project demonstrates a one-way integration from **Cin7 Omni** (the client's
 ---
 # Interpretation of Client Requirements
 
-
 The client expects a lightweight, one-way integration that:
 
-- **Transfers sales order data** from Cin7 Omni to their 3PL provider (Extensiv).
-- Ensures that Extensiv has all the required details to **accurately fulfill the order**, including items, routing, and destination.
-- Is **triggered manually** (e.g., via a console application), rather than running continuously or on a fixed schedule.
-- Can **handle errors gracefully**, log them for troubleshooting, and continue processing other orders if possible.
+### Core Requirements
+- **Automated Order Transfer**: Seamlessly move order data from Cin7 to Extensiv without manual intervention
+- **Previous Day Order Processing**: Process orders modified on the previous day to ensure timely fulfillment
+- **Duplicate Prevention**: Ensure orders are not processed multiple times through intelligent duplicate detection
+- **Flexible Business Models**: Support various commercial models (one-time, subscription, pay-per-use)
+- **Minimal Configuration**: Simple setup process with sensible defaults and configuration wizard
+- **Error Handling**: Robust error handling with detailed logging for troubleshooting
+- **Security**: Secure API communications with proper authentication mechanisms
+- **Manual Execution**: Triggered manually via console application rather than continuous operation
 
----
+### Business Value
+- **Operational Efficiency**: Eliminate manual order entry and reduce processing time
+- **Accuracy**: Reduce human errors in order transcription and field mapping
+- **Scalability**: Handle varying order volumes without manual scaling
+- **Cost Effectiveness**: Minimize operational overhead while maintaining reliability
 
 ### Based on these expectations, I designed the solution to:
 
-- **Query orders modified on the previous day**, assuming that newly created or recently updated orders are ready for 3PL sync.
-- Use the `GET /SalesOrders?where=...` Cin7 API endpoint to retrieve multiple orders in a paginated fashion.
-- Map the order data into the required Extensiv format via an adapter class.
-- Include **line items, shipping address, billing info, and carrier routing instructions** in the transformation.
-- Log errors clearly and continue processing other records if individual orders fail validation or API submission.
+- **Query orders modified on the previous day**, assuming that newly created or recently updated orders are ready for 3PL sync
+- Use the `GET /SalesOrders?where=...` Cin7 API endpoint to retrieve multiple orders in a paginated fashion
+- Map the order data into the required Extensiv format via an adapter class
+- Include **line items, shipping address, billing info, and carrier routing instructions** in the transformation
+- Log errors clearly and continue processing other records if individual orders fail validation or API submission
+- Implement **duplicate detection** using Extensiv's RQL query functionality to prevent reprocessing
+- Provide **comprehensive error handling** with detailed console output for troubleshooting
+- Support **multiple business models** through configurable delivery model settings
+
 ---
 ## API Documentation References
 
@@ -91,16 +103,14 @@ public interface IOrderAdapter
 ---
 
 ### 2. Project Structure (Layered Design)
-
-The project is organized into cleanly separated folders:
-
-| Layer | Folder | Responsibility |
-|-------|--------|----------------|
-| **Models** | `Models/` | Data models (DTOs) for Cin7, Extensiv, and app settings |
-| **Services** | `Services/` | Encapsulates API logic for Cin7 and 3PL |
-| **Interfaces** | `Interfaces/` | Contracts for services and transfer logic |
-| **Adapters** | `Adapters/` | Business logic to map Cin7 objects to 3PL schema |
-
+```
+Cin7ToExtensiv/
+├── Models/              # Data models for Cin7, Extensiv, and configuration
+├── Services/            # API services and business logic
+├── Interfaces/          # Service contracts and abstractions
+├── Adapters/            # Order transformation and mapping logic
+└── Configuration/       # Settings and credential management
+```
 ---
 
 ### 3. Secure Authentication & HTTPS Communication
@@ -144,16 +154,32 @@ To ensure robust operation:
 
 ---
 
-### 5.  Configuration & Flexibility
+### 5. Main Logic Flow
 
-All credentials, mappings, and defaults are placed in `appsettings.example.json`, including:
+1. **Authentication Validation**: Validates credentials for both Cin7 and Extensiv APIs
+2. **Order Retrieval**: Fetches orders from Cin7 modified on the previous day (yesterday 00:00 to 23:59 UTC)
+3. **Data Validation**: Ensures orders have required fields for processing
+4. **Duplicate Check**: Prevents reprocessing orders already in Extensiv using RQL queries
+5. **Field Mapping**: Transforms Cin7 order format to Extensiv requirements via OrderAdapter
+6. **Order Creation**: Creates new orders in Extensiv for fulfillment
+7. **Results Reporting**: Provides detailed statistics and error reporting
 
-- Cin7 credentials
-- 3PL auth client info
-- Facility/customer codes
-- Billing and carrier fallbacks
+---
 
-This enables easy deployment across environments (e.g., staging, production).
+### 6. Configuration & Flexibility
+
+ **First-time Setup Wizard**: Interactive configuration for easy deployment
+- **Environment Support**: Configuration via appsettings.json with environment variable overrides
+- **Business Model Support**: Four delivery models (One-Time, Pay-As-You-Go, Subscription, Just-in-Time)
+- **Flexible Mappings**: Configurable customer IDs, facility IDs, and billing codes
+
+#### Configuration Components:
+- **Cin7 Credentials**: Username (email) and API Key configured in `appsettings.json` under `Cin7` section
+- **3PL Auth Client Info**: Extensiv Client ID, Client Secret, and User Login ID configured under `Extensiv` section
+- **Facility/Customer Codes**: Default Facility ID and Customer ID mappings configured under `Extensiv` section
+- **Billing and Carrier Fallbacks**: Default billing codes and carrier mapping rules configured under `Extensiv` section
+
+---
 
 
 ## 🧠 Assumptions Made During the Integration
@@ -187,14 +213,15 @@ This enables easy deployment across environments (e.g., staging, production).
 
 ### 3. Implementation / Technical Assumptions
 
-| Area | Assumption |
-|------|------------|
-| **Authentication** | Cin7 uses Basic Auth; 3PL uses expiring tokens. Both mechanisms are assumed to work consistently as per documentation. |
-| **Token Refresh** | 3PL tokens are reused within their 1-hour TTL, refreshed every ~55 minutes to avoid expiry errors. |
-| **Pagination** | A single day’s orders can be fetched using 250-record pagination. Further batching is handled as needed. |
-| **Error Handling** | If a required field is missing (e.g., delivery address), the order will be skipped and logged rather than failing the whole batch. |
-| **Configuration** | All inferred mappings (e.g., SCAC, facility codes) are stored in `appsettings.json` and do not require code changes to update. |
-
+| Area                    |   Assumption                                                                                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **API Reliability**          | Both the Cin7 and Extensiv APIs are assumed to be stable and reliable, with low failure rates and minimal downtime.                                             |
+| **Time Zone Consistency**    | Cin7 and Extensiv operate in the same time zone or use a normalized standard (e.g., UTC), so no timezone offset handling is needed.                             |
+| **Authentication**           | Cin7 Basic Auth credentials remain valid throughout execution. Extensiv OAuth tokens are assumed refreshable when expired (every hour).                         |
+| **Token Refresh**            | 3PL tokens are reused within their 1-hour TTL, refreshed every ~55 minutes to avoid expiry errors.                                                  |
+| **Pagination**               | A single day’s orders can be fetched using 250-record pagination. Further batching is handled as needed.    |
+| **Configuration**            | The `appsettings.json` file is accessible and writable during first-time setup, and all required configuration sections are serializable/deserializable.        |
+| **Flexible Delivery Models** | This integration supports various fulfillment models via the same API/config structure:<br>- One-Time (manual)<br>- Subscription (scheduled)<br>- Pay-as-you-go |
 
 
 
