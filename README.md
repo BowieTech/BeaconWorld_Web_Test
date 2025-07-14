@@ -25,8 +25,8 @@ The client expects a lightweight, one-way integration that:
 ---
 ## API Documentation References
 
-- [Cin7 Sales Orders API](https://apidocs.cin7.com/reference#sales-orders)
-- [Extensiv Create Orders API](https://api-docs.extensiv.com/reference/create-orders)
+- [Cin7 Sales Orders API](https://apidocs.cin7.com/api/v1/SalesOrders?fields={fields}&where={where}&order={order}&page={page}&rows={rows})
+- [Extensiv Create Orders API](https://secure-wms.com/orders)
 
 
 # Which data fields chose to map and why
@@ -88,8 +88,6 @@ public interface IOrderAdapter
 }
 ```
 
-This pattern ensures low coupling between APIs and allows for future flexibility (e.g., integrating NetSuite → Extensiv).
-
 ---
 
 ### 2. Project Structure (Layered Design)
@@ -102,9 +100,6 @@ The project is organized into cleanly separated folders:
 | **Services** | `Services/` | Encapsulates API logic for Cin7 and 3PL |
 | **Interfaces** | `Interfaces/` | Contracts for services and transfer logic |
 | **Adapters** | `Adapters/` | Business logic to map Cin7 objects to 3PL schema |
-| **ErrorHandling** | `ErrorHandling/` | Retry logic, logging, and exception policies |
-
-This modular structure helps support separation of concerns, making the codebase easier to extend and maintain.
 
 ---
 
