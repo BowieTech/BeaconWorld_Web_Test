@@ -92,11 +92,7 @@ The client expects a lightweight, one-way integration that:
 | The primary inventory quantity ordered; if not specified, must specify "SecondaryQty". | `shipTo.name` | No | DeliveryFirstName + DeliveryLastName | Used as fallback when deliveryCompany is not available; combines recipient's full name. |
 
 
-#  🎯 Overall Approach and Design Decisions
-
-This integration was built with clarity, reliability, and extensibility in mind. It connects **Cin7 Omni** (as the source of sales orders) to **3PL Central (Extensiv)** via secure HTTPS APIs, transforming and transmitting structured data using a layered architecture and robust authentication flow.
-
----
+#  Overall Approach and Design Decisions
 
 ### 1. Modular Architecture & Adapter Pattern
 
@@ -194,7 +190,7 @@ To ensure robust operation:
 ---
 
 
-## 🧠 Assumptions Made During the Integration
+## Assumptions Made During the Integration
 
 ### 1. Business Assumptions
 
@@ -237,7 +233,7 @@ To ensure robust operation:
 
 
 
-# ❓ What I Would Need to Clarify with the Client in a Real Scenario
+# What I Would Need to Clarify with the Client in a Real Scenario
 
 ### 1.Business Clarifications
 
