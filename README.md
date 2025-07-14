@@ -180,12 +180,8 @@ To avoid hardcoding and improve maintainability, these assumptions were made **c
 
 ---
 
-### 2.  Product and SKU Matching
-
-- I assumed that **`LineItems[].Code`** is the primary SKU reference recognized by 3PL Central.
-- If `Code` is missing, `Barcode` will be used as a fallback identifier.
-
-The correctness of SKU mapping is critical for fulfillment accuracy and should be confirmed with the warehouse team.
+### 2.  Get Sales Orders Modified on the Previous Day
+- I assume that "previous day" means the full 24-hour UTC window before execution time. For example, if today is July 15, 2025, the integration will fetch all sales orders with `modifiedDate` between `"2025-07-14T00:00:00Z"` and `"2025-07-15T00:00:00Z"`. This captures both newly created and updated orders on that day. Orders are paginated in batches of 250 records per request.
 
 ---
 
@@ -201,55 +197,57 @@ The correctness of SKU mapping is critical for fulfillment accuracy and should b
 - I assumed the authentication flows (Cin7 Basic Auth, 3PL token-based auth) are stable and consistent per documentation.
 - I also assumed that 3PL tokens will be reused within their 1-hour TTL and refreshed proactively.
 
+### 5.  Product and SKU Matching
+
+- I assumed that **`LineItems[].Code`** is the primary SKU reference recognized by 3PL Central.
+- If `Code` is missing, `Barcode` will be used as a fallback identifier.
+
+The correctness of SKU mapping is critical for fulfillment accuracy and should be confirmed with the warehouse team.
 
 
 
 # ❓ What I Would Need to Clarify with the Client in a Real Scenario
 
-To ensure that the integration operates accurately and meets business requirements, several areas would need to be clarified with the client during a real-world engagement:
+To ensure the integration operates accurately and aligns with business expectations, the following areas would need to be clarified with the client:
 
 ---
 
-### 1. Field Mapping Clarifications
+### 1. Time Window & Order Volume
 
-- **Billing Code (`billingCode`)**: Since Cin7 does not explicitly provide this field, I would need to confirm the logic for mapping it (e.g., based on `freightDescription`, `paymentTerms`, or predefined config).
-- **Carrier Account (`routingInfo.account`)**: Is there a specific custom field in Cin7 that stores the carrier account, or should it be configured statically per warehouse?
-- **SCAC Code (`routingInfo.scacCode`)**: Cin7 doesn’t return this; should we maintain a config map from `freightDescription` to SCAC values?
-
----
-
-### 2. Business Rules
-
-- **Order Eligibility**: Should we only sync orders in "Approved + Dispatched" state? Or should we include "Draft", "On Hold", or partially fulfilled orders?
-- **Return Orders / Cancelled Orders**: Are we responsible for pushing return or cancellation data to 3PL?
-- **Partial Fulfillment**: How should we handle line items with split shipments?
+- Should the integration fetch only orders **modified** on the previous day (`modifiedDate`), or based on `createdDate`?
+- What is the **expected daily order volume**? This affects pagination strategy, performance tuning, and API rate limit handling.
 
 ---
 
-### 3. Product & SKU Identification
+### 2. Field Mapping Clarifications
 
-- **Primary SKU Field**: Does the 3PL system always expect `Code` from Cin7, or is `Barcode` also accepted?
-- **UOM Handling**: Should we always send `uomQtyOrdered` if it exists, or only use `qty`?
-
----
-
-### 4. Multi-Warehouse or Multi-Facility
-
-- **Facility Identifier Naming**: Does the 3PL expect a specific naming convention or external ID for `facilityIdentifier`?
-- **Multiple Warehouses**: If multiple warehouses are used, is routing logic based on `branchId`, `distributionCenter`, or an external config?
+- **Billing Code (`billingCode`)**: Since Cin7 doesn’t provide this field directly, what logic should we follow? (e.g., infer from `freightDescription`, `paymentTerms`, etc.)
+- **Carrier Account (`routingInfo.account`)**: Is there a custom field in Cin7 that holds this, or should it be mapped via config?
+- **SCAC Code (`routingInfo.scacCode`)**: As Cin7 doesn’t return SCAC, should we map it from `freightDescription` or maintain a static lookup table?
 
 ---
 
-### 5. Authentication & Access
+### 3. Business Rules
 
-- **3PL Token Scope**: Does the 3PL-issued token provide access to all customers and facilities under this account, or do we need separate credentials per warehouse?
+- **Order Eligibility**: Should we sync only orders in "Approved + Dispatched" state, or include "Draft", "On Hold", or partial orders?
+- **Return/Cancelled Orders**: Is this integration also responsible for transmitting return or cancellation info to 3PL?
+- **Partial Fulfillment**: How should line items with partial or split shipments be handled?
 
 ---
 
-### 6. Error Handling & Retries
+### 4. Product & SKU Identification
 
-- **Critical Field Failures**: If a required field (e.g., delivery address) is missing, should the integration skip that order and continue, or halt with an error?
-- **Retry Strategy**: What are the client’s expectations for retrying failed API calls—immediate retry, backoff policy, or alert-only?
+- **Primary SKU Field**: Should we use `Code`, `Barcode`, or both for 3PL matching?
+- **UOM Handling**: Should we prefer `uomQtyOrdered` if present, or always fallback to standard `qty`?
+
+---
+
+### 5. Error Handling & Retries
+
+- **Missing Required Fields**: If key fields like address are missing, should we skip that order or stop the integration?
+- **Retry Strategy**: What’s the client’s expectation—auto-retry with backoff, log-only, or send alerts?
+
+
 # 🚀 How I Would Enhance the Solution for Production Use
 
 While the current implementation meets the requirements for a functional proof of concept, several enhancements would be necessary to make the solution robust, scalable, and production-ready:
