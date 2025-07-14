@@ -158,150 +158,115 @@ All credentials, mappings, and defaults are placed in `appsettings.example.json`
 This enables easy deployment across environments (e.g., staging, production).
 
 
-# 🤔 Assumptions Made During the Integration
+## 🧠 Assumptions Made During the Integration
 
-This integration required several assumptions due to gaps or ambiguities in the source (Cin7) data structure versus the target (Extensiv 3PL) API expectations. Below are the key assumptions made:
+### 1. Business Assumptions
+
+| Area | Assumption |
+|------|------------|
+| **Order Scope** | The integration is assumed to fetch **all orders modified on the previous UTC day** at the time of execution (e.g., 2025-07-14 from 00:00 to 23:59 UTC). |
+| **Dispatched Status** | It is assumed that **orders modified the previous day have not yet been dispatched**, and **all earlier orders have already been dispatched**. |
+| **Time Zone** | All timestamps returned by the Cin7 API are assumed to be in **UTC**, and **no timezone adjustments** are required during filtering or processing. |
+| **Execution Model** | The integration is assumed to be **manually triggered** by the operator and not automated or real-time. |
+| **Order Eligibility** | Only orders with status `Approved` and `Dispatched` are eligible for syncing. Draft or Voided orders are ignored. |
+| **Volume Expectations** | The daily number of eligible orders is assumed to be **within 250 per day** (the default Cin7 pagination limit), unless clarified otherwise. |
 
 ---
 
-### 1.  Inferred Fields Without Direct Mapping
+### 2.Field Mapping Assumptions
 
-Some fields required by Extensiv’s `POST /orders` API do not have direct equivalents in the Cin7 `SalesOrders` schema. The following mappings were **inferred** based on business context or fallback logic:
-
-| 3PL Field | Cin7 Source | Assumption |
+| 3PL Field | Cin7 Field | Assumption |
 |-----------|-------------|------------|
-| `billingCode` | `freightDescription`, `freightTotal`, `paymentTerms` | No dedicated "billing type" exists in Cin7. I assumed the presence of freight charges or payment terms (e.g. "Prepaid") indicates billing method. |
-| `routingInfo.mode` | `freightDescription`, `deliveryInstructions` | No explicit service level like "Ground" or "Overnight" is present. I inferred it from keywords in the freight or delivery notes. |
-| `routingInfo.account` | `customFields['carrierAccount']` (if exists) | Cin7 doesn’t expose a shipping account field. I assumed it may be stored in a custom field or handled via config. |
-| `routingInfo.scacCode` | Not provided | No SCAC code is returned from Cin7. I assumed this must be mapped externally from carrier name via configuration. |
-| `customerIdentifier`, `facilityIdentifier` | `memberId`, `distributionCenter` or `branchId` | I assumed these identifiers must match 3PL-registered names, and would be derived from Cin7 values via config mapping. |
-
-To avoid hardcoding and improve maintainability, these assumptions were made **configurable** via `appsettings.json`.
-
----
-
-### 2.  Get Sales Orders Modified on the Previous Day
-- I assume that "previous day" means the full 24-hour UTC window before execution time. For example, if today is July 15, 2025, the integration will fetch all sales orders with `modifiedDate` between `"2025-07-14T00:00:00Z"` and `"2025-07-15T00:00:00Z"`. This captures both newly created and updated orders on that day. Orders are paginated in batches of 250 records per request.
+| `billingCode` | `freightDescription`, `freightTotal`, `paymentTerms` | Cin7 does not have a dedicated billing type field. I infer the billing method (e.g., Prepaid, Collect) from payment or freight context. |
+| `routingInfo.mode` | `freightDescription`, `deliveryInstructions` | No service level indicator exists. I assume shipping urgency or service (e.g., Ground, Overnight) can be inferred from text content. |
+| `routingInfo.account` | `customFields['carrierAccount']` (if exists) | Cin7 does not expose shipping account numbers. I assume this must be stored in a custom field or mapped via config. |
+| `routingInfo.scacCode` | Not provided | Cin7 lacks SCAC codes. I assume these must be resolved via config mapping from carrier name (e.g., FedEx → FXFE). |
+| `customerIdentifier` / `facilityIdentifier` | `memberId`, `distributionCenter`, `branchId` | These identifiers are assumed to be known values mapped from Cin7 to 3PL via config (e.g., mapping `branchId:3 → LAX-WH`). |
+| `orderItems.itemIdentifier.sku` | `LineItems[].Code`, fallback to `Barcode` | 3PL requires exact SKU. I assume Cin7’s `Code` is the primary SKU; use `Barcode` if `Code` is missing. |
+| `orderItems.qty` | `LineItems[].uomQtyOrdered` or `qty` | If `uomQtyOrdered` exists, use it as the primary quantity; otherwise, use standard `qty`. |
 
 ---
 
+### 3. Implementation / Technical Assumptions
 
-### 3. Order Timing & Processing Triggers
+| Area | Assumption |
+|------|------------|
+| **Authentication** | Cin7 uses Basic Auth; 3PL uses expiring tokens. Both mechanisms are assumed to work consistently as per documentation. |
+| **Token Refresh** | 3PL tokens are reused within their 1-hour TTL, refreshed every ~55 minutes to avoid expiry errors. |
+| **Pagination** | A single day’s orders can be fetched using 250-record pagination. Further batching is handled as needed. |
+| **Error Handling** | If a required field is missing (e.g., delivery address), the order will be skipped and logged rather than failing the whole batch. |
+| **Configuration** | All inferred mappings (e.g., SCAC, facility codes) are stored in `appsettings.json` and do not require code changes to update. |
 
-- I assumed this integration is **manually triggered on demand**, rather than running on a scheduled or real-time basis.
-- It fetches orders from the **previous calendar day** using the `modifiedDate` field as the primary filter.
-- Orders must be **approved and dispatched** to be eligible for sync; draft, voided, or incomplete orders are skipped.
-
----
-
-### 4.  Authentication Stability
-
-- I assumed the authentication flows (Cin7 Basic Auth, 3PL token-based auth) are stable and consistent per documentation.
-- I also assumed that 3PL tokens will be reused within their 1-hour TTL and refreshed proactively.
-
-### 5.  Product and SKU Matching
-
-- I assumed that **`LineItems[].Code`** is the primary SKU reference recognized by 3PL Central.
-- If `Code` is missing, `Barcode` will be used as a fallback identifier.
-
-The correctness of SKU mapping is critical for fulfillment accuracy and should be confirmed with the warehouse team.
 
 
 
 # ❓ What I Would Need to Clarify with the Client in a Real Scenario
 
-To ensure the integration operates accurately and aligns with business expectations, the following areas would need to be clarified with the client:
+### 1.Business Clarifications
+
+- **Order Scope & Timing**: Should the integration fetch **orders modified on the previous day**? Can we assume those orders have not yet been dispatched, and older ones have already shipped?
+- **Timezones**: Is all data stored and processed in **UTC**, or are timezone adjustments required?
+- **Order Eligibility**: Should we only sync **approved + dispatched** orders, or also include draft, on-hold, or partially shipped ones?
+- **Return or Cancelled Orders**: Should this integration handle **returns or cancellations**, or only outbound sales?
+- **Daily Volume**: What is the expected **daily order volume**? Do we need to plan for pagination or batch processing?
 
 ---
 
-### 1. Time Window & Order Volume
+### 2.Technical / Field Mapping Clarifications
 
-- Should the integration fetch only orders **modified** on the previous day (`modifiedDate`), or based on `createdDate`?
-- What is the **expected daily order volume**? This affects pagination strategy, performance tuning, and API rate limit handling.
-
----
-
-### 2. Field Mapping Clarifications
-
-- **Billing Code (`billingCode`)**: Since Cin7 doesn’t provide this field directly, what logic should we follow? (e.g., infer from `freightDescription`, `paymentTerms`, etc.)
-- **Carrier Account (`routingInfo.account`)**: Is there a custom field in Cin7 that holds this, or should it be mapped via config?
-- **SCAC Code (`routingInfo.scacCode`)**: As Cin7 doesn’t return SCAC, should we map it from `freightDescription` or maintain a static lookup table?
-
----
-
-### 3. Business Rules
-
-- **Order Eligibility**: Should we sync only orders in "Approved + Dispatched" state, or include "Draft", "On Hold", or partial orders?
-- **Return/Cancelled Orders**: Is this integration also responsible for transmitting return or cancellation info to 3PL?
-- **Partial Fulfillment**: How should line items with partial or split shipments be handled?
-
----
-
-### 4. Product & SKU Identification
-
-- **Primary SKU Field**: Should we use `Code`, `Barcode`, or both for 3PL matching?
-- **UOM Handling**: Should we prefer `uomQtyOrdered` if present, or always fallback to standard `qty`?
-
----
-
-### 5. Error Handling & Retries
-
-- **Missing Required Fields**: If key fields like address are missing, should we skip that order or stop the integration?
-- **Retry Strategy**: What’s the client’s expectation—auto-retry with backoff, log-only, or send alerts?
-
+- **Billing Code Mapping**: Since Cin7 does not have a `billingCode`, should it be inferred from `freightDescription`, `paymentTerms`, or configured per facility?
+- **Carrier Account Number**: Is there a specific **custom field** in Cin7 (e.g., `carrierAccount`) that should be mapped to `routingInfo.account`?
+- **SCAC Code Mapping**: Cin7 does not provide SCAC. Should we maintain a **static mapping** from carrier name (e.g. FedEx) to SCAC code?
+- **SKU Matching**: Should 3PL always match on `LineItems[].Code`, or is `Barcode` acceptable as a fallback?
+- **Quantity Source**: If both `uomQtyOrdered` and `qty` are present, which field takes precedence when sending quantity to 3PL?
+- **Customer / Facility Identifier**: Do `customerIdentifier` and `facilityIdentifier` need to match exact names in 3PL Central, or are internal Cin7 values mapped externally?
 
 # 🚀 How I Would Enhance the Solution for Production Use
 
-While the current implementation meets the requirements for a functional proof of concept, several enhancements would be necessary to make the solution robust, scalable, and production-ready:
+
+### 1. From the Client / Business Perspective
+
+- **Dashboard or Web Portal**  
+  Provide a lightweight UI (web or desktop) to allow non-technical users to view sync status, trigger manual jobs, or retry failed orders.
+
+- **Email or Slack Notifications**  
+  Send alerts to operational staff for failed orders, authentication errors, or unexpected data.
+
+- **Flexible Date Filtering**  
+  Add a date input mechanism (via CLI flag or UI form) so users can reprocess any date range, not just “previous day.”
+
+- **Exception Handling Strategy**  
+  Allow business users to configure whether invalid orders should fail silently, be flagged for review, or block the sync.
+
+- **Order Confirmation / Logging**  
+  Keep an internal archive or database of processed orders with timestamps, status, and references for audit and traceability.
 
 ---
 
-###  1. Robust Error Handling & Monitoring
+### 2.From the Code Perspective
 
-- Implement structured **logging** using a framework like Serilog or NLog.
-- Introduce a centralized **error tracking system** (e.g., Sentry, Application Insights).
-- Add retry logic with exponential backoff for transient network failures.
+- **Authentication Improvements**  
+  - Store secrets in **Key Vaults** (e.g., Azure Key Vault, AWS Secrets Manager).  
+  - Implement **auto token refresh** logic for 3PL token reuse before expiry (every 50–55 minutes).
 
----
+- **Scheduling and Automation**  
+  - Add support for **cron-based** or **interval-based** automation using Quartz.NET, Hangfire, or Windows Task Scheduler.  
+  - Make sync interval configurable per environment.
 
-###  2. Configurable Scheduling & Job Management
+- **Resilience and Observability**  
+  - Implement **retry with backoff** for transient errors.  
+  - Add **structured logging** via Serilog or similar, and integrate with Application Insights or Sentry.
 
-- Integrate a **scheduler** (e.g., Quartz.NET or Hangfire) to automate order syncs at configurable intervals.
-- Add support for manual reprocessing of failed orders via CLI arguments or a simple dashboard.
+- **Error Recovery**  
+  - Write failed requests to a local file, queue, or database for later reprocessing.  
+  - Build a retry queue system for failed orders.
 
----
+- **Testing & Extensibility**  
+  - Add **unit tests** for adapters and services.  
+  - Add **integration tests** with stubbed external APIs.  
+  - Use interfaces (`ICin7ApiService`, `IOrderAdapter`, `IExtensivApiService`) for DI-friendly architecture.
 
-###  3. Enhanced Security
-
-- Secure secrets (e.g., API keys, client secrets) using **Azure Key Vault**, **AWS Secrets Manager**, or user secrets.
-- Ensure all outbound HTTP requests use **HTTPS only**, and validate TLS certificates.
-
----
-
-### 4. Improved Test Coverage
-
-- Add **unit tests** for adapters and mapping logic.
-- Write **integration tests** for Cin7 and 3PL API endpoints using mock clients or staging environments.
-
----
-
-###  5. Resilience & Recovery
-
-- Add **dead-letter queue** support for failed payloads (e.g., write to file or DB for retry).
-- Track last successful sync timestamp to avoid reprocessing orders.
-
----
-
-###  6. Deployment & DevOps
-
-- Containerize the solution using **Docker** for portability.
-- Set up **CI/CD pipeline** (GitHub Actions, Azure DevOps, etc.) for automated build, test, and deploy.
-- Support deployment in cloud environments like **Azure App Service** or **AWS Lambda** for scalability.
-
----
-
-###  7. Dashboard & Reporting (Optional)
-
-- Provide a lightweight **admin UI** to track sync status, recent jobs, and error logs.
-- Include metrics (e.g., success/failure rate, processing time) for operational visibility.
+- **Deployment Readiness**  
+  - Dockerize the app and provide a `Dockerfile` and `docker-compose` script.  
+  - Enable CI/CD via GitHub Actions or Azure DevOps with environment-based configurations.
 
