@@ -35,14 +35,13 @@ The client expects a lightweight, one-way integration that:
 - Support **multiple business models** through configurable delivery model settings
 
 ---
+
+# Which data fields chose to map and why
+
 ## API Documentation References
 
 - [Cin7 Sales Orders API](https://apidocs.cin7.com/api/v1/SalesOrders?fields={fields}&where={where}&order={order}&page={page}&rows={rows})
 - [Extensiv Create Orders API](https://secure-wms.com/orders)
-
-
-# Which data fields chose to map and why
-
 
 ## 1.Required Fields
 
