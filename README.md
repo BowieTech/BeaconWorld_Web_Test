@@ -235,26 +235,95 @@ Authorization: Bearer <access_token>
 
 
 
-# What I Would Need to Clarify with the Client in a Real Scenario
+# 📌 What to Clarify with the Client Before Deployment
 
-### 1.Business Clarifications
+Before going live with the Cin7 → Extensiv integration, the following business and technical items should be confirmed with the client to ensure the solution fits their real-world operation and avoids unexpected behaviors.
+---
 
-- **Order Scope & Timing**: Should the integration fetch **orders modified on the previous day**? Can we assume those orders have not yet been dispatched, and older ones have already shipped?
-- **Timezones**: Is all data stored and processed in **UTC**, or are timezone adjustments required?
-- **Order Eligibility**: Should we only sync **approved + dispatched** orders, or also include draft, on-hold, or partially shipped ones?
-- **Return or Cancelled Orders**: Should this integration handle **returns or cancellations**, or only outbound sales?
-- **Daily Volume**: What is the expected **daily order volume**? Do we need to plan for pagination or batch processing?
+## 1. Business Logic Clarifications
+
+### Order Timeframe & Time Zone
+
+* Are **Cin7 timestamps in UTC**, or should we apply a specific time zone (e.g., PST, AEST)?
+* Should we pull **orders modified yesterday**, or **orders created yesterday**?
+
+### Order Status Eligibility
+
+* Should the integration only process `Approved` and `Dispatched` orders?
+* What should happen if an order was previously sent and then **updated** in Cin7 — should it be re-sent?
+
+### Duplicate Detection
+
+* We use the Extensiv `referenceNum` to detect duplicates. Is that sufficient?
+* If a duplicate is found, should we **skip**, **overwrite**, or **raise an alert**?
+
+### Business Models & Fulfillment Flow
+
+* Which business model(s) does the client use: **One-Time**, **Subscription**, **Just-in-Time**, or **Pay-As-You-Go**?
+* Do they operate with **multiple facilities or warehouse customers**, and if so, should those be dynamically mapped?
+
+###  Error Handling Expectations
+
+* Should failed orders be **reprocessed automatically** later, or handled manually?
+* Would the client prefer **email reports**, **error logs**, or some dashboard for reviewing failed submissions?
 
 ---
 
-### 2.Technical / Field Mapping Clarifications
+## 2. Field Mapping Clarifications
 
-- **Billing Code Mapping**: Since Cin7 does not have a `billingCode`, should it be inferred from `freightDescription`, `paymentTerms`, or configured per facility?
-- **Carrier Account Number**: Is there a specific **custom field** in Cin7 (e.g., `carrierAccount`) that should be mapped to `routingInfo.account`?
-- **SCAC Code Mapping**: Cin7 does not provide SCAC. Should we maintain a **static mapping** from carrier name (e.g. FedEx) to SCAC code?
-- **SKU Matching**: Should 3PL always match on `LineItems[].Code`, or is `Barcode` acceptable as a fallback?
-- **Quantity Source**: If both `uomQtyOrdered` and `qty` are present, which field takes precedence when sending quantity to 3PL?
-- **Customer / Facility Identifier**: Do `customerIdentifier` and `facilityIdentifier` need to match exact names in 3PL Central, or are internal Cin7 values mapped externally?
+### Customer & Facility Identifiers
+
+* Can the client provide a mapping table between **Cin7 MemberId / BranchId** and **Extensiv customerIdentifier / facilityIdentifier**?
+
+### SKU Format
+
+* Does every product in Cin7 have a valid `Code`? Can we fall back to `Barcode`?
+* Are **SKUs case-sensitive** in the Extensiv system?
+
+### Billing Code Inference
+
+* We infer the `billingCode` from `freightDescription`, `paymentTerms`, or `freightTotal`. Is this accurate for their billing setup?
+* Do they have specific billing codes per **carrier or customer type**?
+
+### SCAC and Carrier Accounts
+
+* Can the client provide a **carrier-to-SCAC code mapping** (e.g., FedEx → FXFE)?
+* Do they use multiple **carrier account numbers**, and if so, are they stored in **custom fields** in Cin7?
+
+### 🛠 Custom Fields
+
+* Are any critical values (e.g., `carrierAccount`, `deliveryInstructions`) stored in **custom fields** in Cin7?
+* Can the client provide sample data for reference?
+
+---
+
+## 3. Operational Setup & Deployment Support
+
+###  Local Environment Requirements
+
+* Will the integration run on a **local server**, **cloud VM**, or **dedicated machine**?
+* Is **.NET 9.0 runtime** already installed? Do they need help setting it up?
+
+### ⚙ Trigger Mechanism
+
+* The solution is designed to be **manually run via console**. Does the client need support for:
+
+  * **Windows Task Scheduler**
+  * **cron job (Linux)**
+  * or **a RESTful trigger wrapper**?
+
+###  Configuration & Secrets Management
+
+* Will the `appsettings.json` file be updated directly?
+* Do they prefer using **environment variables** or a **key vault** for sensitive data (e.g., API keys)?
+
+###  First-Time Testing & Support
+
+* Does the client need **technical assistance during first deployment**?
+* Should the first run be performed in a **staging / sandbox** environment?
+
+---
+
 
 # 🚀 How I Would Enhance the Solution for Production Use
 
