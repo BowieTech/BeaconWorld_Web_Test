@@ -1,7 +1,20 @@
 # Cin7 to Extensiv Sales Order Integration
 
+## 📋 Overview
 This project demonstrates a one-way integration from **Cin7 Omni** (the client's inventory/order system) to **Extensiv** (3PL warehouse system), designed as a .NET Console Application. The integration extracts sales orders from Cin7 and transforms them into a format compatible with Extensiv's order creation API.
+### 🛠️ Technical Stack & Framework
 
+- **Framework**: .NET 9.0 Console Application
+- **Architecture**: Layered architecture with Dependency Injection
+- **Design Patterns**: Adapter Pattern, Repository Pattern, Service Layer Pattern
+- **HTTP Client**: Built-in HttpClient with custom API services
+- **Authentication**:
+  - Cin7: Basic Authentication (username:apikey)
+  - Extensiv: OAuth 2.0 Token-based authentication with auto-refresh
+- **Configuration**: Microsoft.Extensions.Configuration with JSON-based configuration and first-time setup wizard
+- **Data Serialization**: Newtonsoft.Json 13.0.3 for API request/response handling
+- **Error Handling**: Comprehensive exception handling with detailed logging
+- **Testing**: Integration tests and individual API endpoint testing
 ---
 # Interpretation of Client Requirements
 
