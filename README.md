@@ -238,6 +238,7 @@ Authorization: Bearer <access_token>
 # 📌 What to Clarify with the Client Before Deployment
 
 Before going live with the Cin7 → Extensiv integration, the following business and technical items should be confirmed with the client to ensure the solution fits their real-world operation and avoids unexpected behaviors.
+
 ---
 
 ## 1. Business Logic Clarifications
@@ -262,7 +263,7 @@ Before going live with the Cin7 → Extensiv integration, the following business
 * Which business model(s) does the client use: **One-Time**, **Subscription**, **Just-in-Time**, or **Pay-As-You-Go**?
 * Do they operate with **multiple facilities or warehouse customers**, and if so, should those be dynamically mapped?
 
-###  Error Handling Expectations
+### Error Handling Expectations
 
 * Should failed orders be **reprocessed automatically** later, or handled manually?
 * Would the client prefer **email reports**, **error logs**, or some dashboard for reviewing failed submissions?
@@ -290,7 +291,7 @@ Before going live with the Cin7 → Extensiv integration, the following business
 * Can the client provide a **carrier-to-SCAC code mapping** (e.g., FedEx → FXFE)?
 * Do they use multiple **carrier account numbers**, and if so, are they stored in **custom fields** in Cin7?
 
-### 🛠 Custom Fields
+### Custom Fields
 
 * Are any critical values (e.g., `carrierAccount`, `deliveryInstructions`) stored in **custom fields** in Cin7?
 * Can the client provide sample data for reference?
@@ -299,12 +300,12 @@ Before going live with the Cin7 → Extensiv integration, the following business
 
 ## 3. Operational Setup & Deployment Support
 
-###  Local Environment Requirements
+### Local Environment Requirements
 
 * Will the integration run on a **local server**, **cloud VM**, or **dedicated machine**?
 * Is **.NET 9.0 runtime** already installed? Do they need help setting it up?
 
-### ⚙ Trigger Mechanism
+### Trigger Mechanism
 
 * The solution is designed to be **manually run via console**. Does the client need support for:
 
@@ -312,65 +313,109 @@ Before going live with the Cin7 → Extensiv integration, the following business
   * **cron job (Linux)**
   * or **a RESTful trigger wrapper**?
 
-###  Configuration & Secrets Management
+### Configuration & Secrets Management
 
 * Will the `appsettings.json` file be updated directly?
 * Do they prefer using **environment variables** or a **key vault** for sensitive data (e.g., API keys)?
 
-###  First-Time Testing & Support
+### First-Time Testing & Support
 
 * Does the client need **technical assistance during first deployment**?
 * Should the first run be performed in a **staging / sandbox** environment?
 
 ---
 
+# How I Would Enhance the Solution for Production Use
 
-# 🚀 How I Would Enhance the Solution for Production Use
+## 1. From the Client / Business Perspective
 
+### Service Model Design per Fulfillment Type
 
-### 1. From the Client / Business Perspective
+* Clearly define how each business model is handled during integration:
 
-- **Dashboard or Web Portal**  
-  Provide a lightweight UI (web or desktop) to allow non-technical users to view sync status, trigger manual jobs, or retry failed orders.
+  * **One-Time Purchase**: Orders are processed immediately with no recurring logic.
+  * **Subscription (Monthly)**: Orders are generated based on a scheduled cadence (e.g., every 30 days).
+  * **Pay-As-You-Go**: Orders are triggered dynamically when usage thresholds or triggers are met (requires usage tracking input).
+  * **Event-Driven Fulfillment**: Orders are generated in response to specific events such as webhook triggers, external actions, or marketplace events.
+* Add flags or configuration mappings to classify order type and define sync strategy accordingly.
+* Ensure that future extensibility allows multiple models per customer or SKU as needed.
 
-- **Email or Slack Notifications**  
-  Send alerts to operational staff for failed orders, authentication errors, or unexpected data.
+### Scheduled Automation
 
-- **Flexible Date Filtering**  
-  Add a date input mechanism (via CLI flag or UI form) so users can reprocess any date range, not just “previous day.”
+* Set up automatic execution using Windows Task Scheduler, cron job, or a cloud function (e.g., Azure Function).
+* Ensures consistent daily syncs without manual intervention.
 
-- **Exception Handling Strategy**  
-  Allow business users to configure whether invalid orders should fail silently, be flagged for review, or block the sync.
+### Email Alerts & Reporting
 
-- **Order Confirmation / Logging**  
-  Keep an internal archive or database of processed orders with timestamps, status, and references for audit and traceability.
+* Add daily email reports for:
+
+  * Successful order sync summaries
+  * Failed orders with reasons
+* Include CSV or log file attachments.
+
+### Staging & Production Environment Separation
+
+* Support separate config profiles for dev/staging/production.
+* Use environment variables for safer deployment and CI/CD.
+
+### Dashboard / Admin Interface
+
+* Optional admin interface to:
+
+  * View recent logs
+  * Reprocess failed orders
+  * Update mappings without editing JSON manually
+
+### Audit Logging
+
+* Add structured logs for:
+
+  * API calls and results (redact sensitive data)
+  * Duplicate detection reasons
+  * Token lifecycle events
 
 ---
 
-### 2.From the Code Perspective
+## 2. From the Code / Architecture Perspective
 
-- **Authentication Improvements**  
-  - Store secrets in **Key Vaults** (e.g., Azure Key Vault, AWS Secrets Manager).  
-  - Implement **auto token refresh** logic for 3PL token reuse before expiry (every 50–55 minutes).
+### Unit Test Coverage
 
-- **Scheduling and Automation**  
-  - Add support for **cron-based** or **interval-based** automation using Quartz.NET, Hangfire, or Windows Task Scheduler.  
-  - Make sync interval configurable per environment.
+* Expand test coverage with xUnit/NUnit.
+* Test adapters, validators, and edge cases with mocked services.
 
-- **Resilience and Observability**  
-  - Implement **retry with backoff** for transient errors.  
-  - Add **structured logging** via Serilog or similar, and integrate with Application Insights or Sentry.
+### Logging Infrastructure
 
-- **Error Recovery**  
-  - Write failed requests to a local file, queue, or database for later reprocessing.  
-  - Build a retry queue system for failed orders.
+* Use Serilog or Microsoft.Extensions.Logging for structured logs.
+* Enable writing to file, console, or external systems (e.g., Seq).
 
-- **Testing & Extensibility**  
-  - Add **unit tests** for adapters and services.  
-  - Add **integration tests** with stubbed external APIs.  
-  - Use interfaces (`ICin7ApiService`, `IOrderAdapter`, `IExtensivApiService`) for DI-friendly architecture.
+### Retry & Resilience Framework
 
-- **Deployment Readiness**  
-  - Dockerize the app and provide a `Dockerfile` and `docker-compose` script.  
-  - Enable CI/CD via GitHub Actions or Azure DevOps with environment-based configurations.
+* Add retry logic using Polly (for transient errors, rate limits).
+* Implement exponential backoff and circuit-breaker patterns.
+
+### Configuration Validation
+
+* Validate appsettings.json schema at startup.
+* Prevent runtime failures due to missing or invalid configs.
+
+### Plug-in Architecture
+
+* Decouple adapters to support multiple platforms in the future (e.g., Shopify → Extensiv).
+* Register converters via DI or reflection.
+
+### CLI Parameter Support
+
+* Allow runtime options like:
+
+  * \--from / --to date filters
+  * \--dry-run for safe testing
+  * \--verbose for debugging
+
+### Containerization Support
+
+* Package as Docker image for portability.
+* Suitable for deploying in Kubernetes, ECS, or CI/CD pipelines.
+
+---
+
 
