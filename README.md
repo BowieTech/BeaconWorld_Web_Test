@@ -125,7 +125,7 @@ Cin7ToExtensiv/
 
 Both Cin7 and 3PL Central APIs **require encrypted communication over HTTPS**. Plain HTTP is strictly prohibited by both platforms to ensure secure data exchange.
 
-####  Cin7 Authentication
+####  3.1 Cin7 Authentication
 
 - Uses **Basic Authentication**.
 - Each request includes a base64-encoded `username:apiKey` in the header.
@@ -135,7 +135,7 @@ Both Cin7 and 3PL Central APIs **require encrypted communication over HTTPS**. P
 Authorization: Basic <base64-encoded-credentials>
 ```
 
-#### 3PL Central Authentication
+#### 3.2 3PL Central Authentication
 
 - Uses **Token-based authentication** (OAuth-like).
 - An access token is retrieved via `POST /AuthServer/api/Token`.
@@ -145,33 +145,35 @@ Authorization: Basic <base64-encoded-credentials>
 Authorization: Bearer <access_token>
 ```
 
-To ensure robust operation:
-- Tokens are **cached in memory**.
-- Retry logic attempts re-authentication if token is expired mid-call.
-- Token reuse is enforced per best practices (no token-per-call).
+#### 3.3 Token Management & Storage:
+- **Token Storage**: Extensiv OAuth tokens are stored in-memory during application execution (not persisted to disk)
+- **Token Lifecycle**: Tokens expire every 60 minutes and are automatically refreshed before expiration
+- **Token Reuse**: Active tokens are reused for multiple API calls within the same execution session
+- **Refresh Strategy**: Proactive token refresh occurs at 50-55 minute intervals to prevent expiration during operations
+
+#### 3.4 Retry Mechanisms:
+- **Authentication Failures**: Automatic retry with fresh token acquisition on 401 Unauthorized responses
+- **Network Failures**: Built-in HttpClient retry for transient network issues
+- **Rate Limiting**: Respects API rate limits with appropriate delays between requests
+- **Token Refresh Failures**: Fallback to complete re-authentication if token refresh fails
+
+#### 3.5 Security Features:
+- **HTTPS Only**: All API communications encrypted via TLS/SSL
+- **Credential Protection**: API keys and secrets stored in local configuration files (not in source code)
+- **No Token Persistence**: OAuth tokens are never written to disk or logs for security
+- **Secure Headers**: Proper HTTP headers including User-Agent, Accept, and Content-Type
 
 ---
+### 4. Main Logic Flow
 
-### 4. Sales Order Flow
-
-1. `Cin7ApiService` pulls sales order data via Cin7 REST API.
-2. `OrderAdapter` transforms it to match Extensiv's expected structure.
-3. `ExtensivApiService` authenticates and sends data via `POST /orders`.
-4. `RetryPolicy` handles transient failures like expired tokens or network errors.
-5. `ErrorLogger` writes logs for auditing and troubleshooting.
-
----
-
-### 5. Main Logic Flow
-
-1. **Authentication Validation**: Validates credentials for both Cin7 and Extensiv APIs
-2. **Order Retrieval**: Fetches orders from Cin7 modified on the previous day (yesterday 00:00 to 23:59 UTC)
-3. **Data Validation**: Ensures orders have required fields for processing
-4. **Duplicate Check**: Prevents reprocessing orders already in Extensiv using RQL queries
-5. **Field Mapping**: Transforms Cin7 order format to Extensiv requirements via OrderAdapter
-6. **Order Creation**: Creates new orders in Extensiv for fulfillment
-7. **Results Reporting**: Provides detailed statistics and error reporting
-
+1. **Authentication Phase**: Validate Cin7 credentials and obtain Extensiv OAuth token
+2. **Order Retrieval**: Query Cin7 API for orders modified in the previous day using date filters
+3. **Data Validation**: Validate each order for required fields (customer, items, shipping address)
+4. **Duplicate Detection**: Check Extensiv using RQL queries to prevent reprocessing existing orders
+5. **Order Transformation**: Apply field mapping via OrderAdapter to convert Cin7 format to Extensiv format
+6. **Order Submission**: Create orders in Extensiv via POST /orders API with proper error handling
+7. **Result Tracking**: Log success/failure status for each order with detailed error messages
+8. **Final Reporting**: Generate execution summary with statistics and recommendations
 ---
 
 ### 6. Configuration & Flexibility
