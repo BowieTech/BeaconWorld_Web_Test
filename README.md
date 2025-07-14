@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 This project demonstrates a one-way integration from **Cin7 Omni** (the client's inventory/order system) to **Extensiv** (3PL warehouse system), designed as a .NET Console Application. The integration extracts sales orders from Cin7 and transforms them into a format compatible with Extensiv's order creation API.
-### 🛠️ Technical Stack & Framework
+### Technical Stack & Framework
 
 - **Framework**: .NET 9.0 Console Application
 - **Architecture**: Layered architecture with Dependency Injection
@@ -92,7 +92,7 @@ The client expects a lightweight, one-way integration that:
 | The primary inventory quantity ordered; if not specified, must specify "SecondaryQty". | `shipTo.name` | No | DeliveryFirstName + DeliveryLastName | Used as fallback when deliveryCompany is not available; combines recipient's full name. |
 
 
-#  Overall Approach and Design Decisions
+#  🎯 Overall Approach and Design Decisions
 
 This integration was built with clarity, reliability, and extensibility in mind. It connects **Cin7 Omni** (as the source of sales orders) to **3PL Central (Extensiv)** via secure HTTPS APIs, transforming and transmitting structured data using a layered architecture and robust authentication flow.
 
