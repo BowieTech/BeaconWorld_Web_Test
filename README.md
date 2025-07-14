@@ -185,10 +185,12 @@ To avoid hardcoding and improve maintainability, these assumptions were made **c
 
 ---
 
+
 ### 3. Order Timing & Processing Triggers
 
-- I assumed this integration runs **on-demand or scheduled**, not in real-time.
-- Only **approved and dispatched** orders are eligible for sync. Draft, voided, or incomplete orders are skipped.
+- I assumed this integration is **manually triggered on demand**, rather than running on a scheduled or real-time basis.
+- It fetches orders from the **previous calendar day** using the `modifiedDate` field as the primary filter.
+- Orders must be **approved and dispatched** to be eligible for sync; draft, voided, or incomplete orders are skipped.
 
 ---
 
