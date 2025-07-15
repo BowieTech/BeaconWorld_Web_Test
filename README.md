@@ -6,7 +6,7 @@ This project demonstrates a one-way integration from **Cin7 Omni** (the client's
 
 - **Framework**: .NET 9.0 Console Application
 - **Architecture**: Layered architecture with Dependency Injection
-- **Design Patterns**: Adapter Pattern, Repository Pattern, Service Layer Pattern
+- **Design Patterns**: Adapter Pattern, Service Layer Pattern
 - **HTTP Client**: Built-in HttpClient with custom API services
 - **Authentication**:
   - Cin7: Basic Authentication (username:apikey)
@@ -202,7 +202,6 @@ Authorization: Bearer <access_token>
 | **Dispatched Status** | It is assumed that **orders modified the previous day have not yet been dispatched**, and **all earlier orders have already been dispatched**. |
 | **Time Zone** | All timestamps returned by the Cin7 API are assumed to be in **UTC**, and **no timezone adjustments** are required during filtering or processing. |
 | **Execution Model** | The integration is assumed to be **manually triggered** by the operator and not automated or real-time. |
-| **Order Eligibility** | Only orders with status `Approved` and `Dispatched` are eligible for syncing. Draft or Voided orders are ignored. |
 | **Volume Expectations** | The daily number of eligible orders is assumed to be **within 250 per day** (the default Cin7 pagination limit), unless clarified otherwise. |
 
 ---
