@@ -331,88 +331,102 @@ Before going live with the Cin7 → Extensiv integration, the following business
 
 * Clearly define how each business model is handled during integration:
 
-  * **One-Time Purchase**: Orders are processed immediately with no recurring logic.
-  * **Subscription (Monthly)**: Orders are generated based on a scheduled cadence (e.g., every 30 days).
-  * **Pay-As-You-Go**: Orders are triggered dynamically when usage thresholds or triggers are met (requires usage tracking input).
-  * **Event-Driven Fulfillment**: Orders are generated in response to specific events such as webhook triggers, external actions, or marketplace events.
-* Add flags or configuration mappings to classify order type and define sync strategy accordingly.
-* Ensure that future extensibility allows multiple models per customer or SKU as needed.
+  - **One-Time Purchase**: Orders are processed immediately with no recurring logic.
+  -  **Subscription (Monthly)**: Orders are generated based on a scheduled cadence (e.g., every 30 days).
+  -  **Pay-As-You-Go**: Orders are triggered dynamically when usage thresholds or triggers are met (requires usage tracking input).
+  -  **Event-Driven Fulfillment**: Orders are generated in response to specific events such as webhook triggers, external actions, or marketplace events.
+-  Add flags or configuration mappings to classify order type and define sync strategy accordingly.
+-  Ensure that future extensibility allows multiple models per customer or SKU as needed.
 
 #### Scheduled Automation
 
-* Set up automatic execution using Windows Task Scheduler, cron job, or a cloud function (e.g., Azure Function).
-* Ensures consistent daily syncs without manual intervention.
-
+-  Set up automatic execution using Windows Task Scheduler, cron job, or a cloud function (e.g., Azure Function).
+-  Ensures consistent daily syncs without manual intervention.
+- 
 #### Email Alerts & Reporting
 
-* Add daily email reports for:
+-  Add daily email reports for:
 
-  * Successful order sync summaries
-  * Failed orders with reasons
-* Include CSV or log file attachments.
+  -  Successful order sync summaries
+  -  Failed orders with reasons
+-  Include CSV or log file attachments.
 
 #### Staging & Production Environment Separation
 
-* Support separate config profiles for dev/staging/production.
-* Use environment variables for safer deployment and CI/CD.
+-  Support separate config profiles for dev/staging/production.
+-  Use environment variables for safer deployment and CI/CD.
 
 #### Dashboard / Admin Interface
 
-* Optional admin interface to:
+-  Optional admin interface to:
 
-  * View recent logs
-  * Reprocess failed orders
-  * Update mappings without editing JSON manually
+ -  View recent logs
+  -  Reprocess failed orders
+  -  Update mappings without editing JSON manually
 
 #### Audit Logging
 
-* Add structured logs for:
+-  Add structured logs for:
 
-  * API calls and results (redact sensitive data)
-  * Duplicate detection reasons
-  * Token lifecycle events
+-  API calls and results (redact sensitive data)
+-  Duplicate detection reasons
+- Token lifecycle events
 
 ---
 
 ### 2. From the Code / Architecture Perspective
 
+#### Cloud-Native Deployment Strategy
+- Design for compatibility with cloud environments such as AWS Lambda, Azure Functions, or Kubernetes.
+- Use environment variables and secret stores (e.g., AWS Parameter Store, Azure Key Vault) for secure configuration.
+- Enable stateless execution by decoupling data retrieval, transformation, and submission.
+- Consider separating the retrieval, processing, and submission phases into distinct cloud jobs or containers.
+- 
+#### Containerization Support
+
+-  Package as Docker image for portability.
+-  Suitable for deploying in Kubernetes, ECS, or CI/CD pipelines.
+-  
+#### High Volume & Concurrency Handling
+- Introduce batching and throttling mechanisms to handle large volumes of sales orders efficiently.
+- Use `SemaphoreSlim` or a task queue for controlled concurrency.
+- Implement Redis (or another distributed cache) to:
+  - Store in-progress order IDs temporarily to prevent reprocessing.
+  - Track token states or response caching if API limits are hit.
+- Monitor throughput and performance with metrics (e.g., orders/min, API latency).
+- 
 #### Unit Test Coverage
-
-* Expand test coverage with xUnit/NUnit.
-* Test adapters, validators, and edge cases with mocked services.
-
+- Expand test coverage with xUnit/NUnit.
+- Test adapters, validators, and edge cases with mocked services.
+- 
 #### Logging Infrastructure
 
-* Use Serilog or Microsoft.Extensions.Logging for structured logs.
-* Enable writing to file, console, or external systems (e.g., Seq).
-
+-  Use Serilog or Microsoft.Extensions.Logging for structured logs.
+-  Enable writing to file, console, or external systems (e.g., Seq).
+- 
 #### Retry & Resilience Framework
 
-* Add retry logic using Polly (for transient errors, rate limits).
-* Implement exponential backoff and circuit-breaker patterns.
+-  Add retry logic using Polly (for transient errors, rate limits).
+-  Implement exponential backoff and circuit-breaker patterns.
 
 #### Configuration Validation
 
-* Validate appsettings.json schema at startup.
-* Prevent runtime failures due to missing or invalid configs.
+-  Validate appsettings.json schema at startup.
+-  Prevent runtime failures due to missing or invalid configs.
 
 #### Plug-in Architecture
 
-* Decouple adapters to support multiple platforms in the future (e.g., Shopify → Extensiv).
-* Register converters via DI or reflection.
+-  Decouple adapters to support multiple platforms in the future (e.g., Shopify → Extensiv).
+-  Register converters via DI or reflection.
 
 #### CLI Parameter Support
 
-* Allow runtime options like:
+-  Allow runtime options like:
 
   * \--from / --to date filters
   * \--dry-run for safe testing
   * \--verbose for debugging
-
-#### Containerization Support
-
-* Package as Docker image for portability.
-* Suitable for deploying in Kubernetes, ECS, or CI/CD pipelines.
+- 
 
 ---
 
