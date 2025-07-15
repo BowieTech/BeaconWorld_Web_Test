@@ -235,35 +235,34 @@ Authorization: Bearer <access_token>
 
 
 
-# 📌 What to Clarify with the Client Before Deployment
+## 📌 What to Clarify with the Client Before Deployment
 
 Before going live with the Cin7 → Extensiv integration, the following business and technical items should be confirmed with the client to ensure the solution fits their real-world operation and avoids unexpected behaviors.
 
 ---
 
-## 1. Business Logic Clarifications
+### 1. Business Logic Clarifications
 
-### Order Timeframe & Time Zone
+#### Order Timeframe & Time Zone
 
 * Are **Cin7 timestamps in UTC**, or should we apply a specific time zone (e.g., PST, AEST)?
 * Should we pull **orders modified yesterday**, or **orders created yesterday**?
 
-### Order Status Eligibility
+#### Order Status Eligibility
 
 * Should the integration only process `Approved` and `Dispatched` orders?
 * What should happen if an order was previously sent and then **updated** in Cin7 — should it be re-sent?
 
-### Duplicate Detection
+####  Duplicate Detection
 
 * We use the Extensiv `referenceNum` to detect duplicates. Is that sufficient?
 * If a duplicate is found, should we **skip**, **overwrite**, or **raise an alert**?
-
-### Business Models & Fulfillment Flow
+#### Business Models & Fulfillment Flow
 
 * Which business model(s) does the client use: **One-Time**, **Subscription**, **Just-in-Time**, or **Pay-As-You-Go**?
 * Do they operate with **multiple facilities or warehouse customers**, and if so, should those be dynamically mapped?
 
-### Error Handling Expectations
+#### Error Handling Expectations
 
 * Should failed orders be **reprocessed automatically** later, or handled manually?
 * Would the client prefer **email reports**, **error logs**, or some dashboard for reviewing failed submissions?
@@ -272,40 +271,40 @@ Before going live with the Cin7 → Extensiv integration, the following business
 
 ## 2. Field Mapping Clarifications
 
-### Customer & Facility Identifiers
+#### Customer & Facility Identifiers
 
 * Can the client provide a mapping table between **Cin7 MemberId / BranchId** and **Extensiv customerIdentifier / facilityIdentifier**?
 
-### SKU Format
+#### SKU Format
 
 * Does every product in Cin7 have a valid `Code`? Can we fall back to `Barcode`?
 * Are **SKUs case-sensitive** in the Extensiv system?
 
-### Billing Code Inference
+#### Billing Code Inference
 
 * We infer the `billingCode` from `freightDescription`, `paymentTerms`, or `freightTotal`. Is this accurate for their billing setup?
 * Do they have specific billing codes per **carrier or customer type**?
 
-### SCAC and Carrier Accounts
+#### SCAC and Carrier Accounts
 
 * Can the client provide a **carrier-to-SCAC code mapping** (e.g., FedEx → FXFE)?
 * Do they use multiple **carrier account numbers**, and if so, are they stored in **custom fields** in Cin7?
 
-### Custom Fields
+#### Custom Fields
 
 * Are any critical values (e.g., `carrierAccount`, `deliveryInstructions`) stored in **custom fields** in Cin7?
 * Can the client provide sample data for reference?
 
 ---
 
-## 3. Operational Setup & Deployment Support
+### 3. Operational Setup & Deployment Support
 
-### Local Environment Requirements
+#### Local Environment Requirements
 
 * Will the integration run on a **local server**, **cloud VM**, or **dedicated machine**?
 * Is **.NET 9.0 runtime** already installed? Do they need help setting it up?
 
-### Trigger Mechanism
+#### Trigger Mechanism
 
 * The solution is designed to be **manually run via console**. Does the client need support for:
 
@@ -313,23 +312,22 @@ Before going live with the Cin7 → Extensiv integration, the following business
   * **cron job (Linux)**
   * or **a RESTful trigger wrapper**?
 
-### Configuration & Secrets Management
+#### Configuration & Secrets Management
 
 * Will the `appsettings.json` file be updated directly?
 * Do they prefer using **environment variables** or a **key vault** for sensitive data (e.g., API keys)?
-
-### First-Time Testing & Support
+####First-Time Testing & Support
 
 * Does the client need **technical assistance during first deployment**?
 * Should the first run be performed in a **staging / sandbox** environment?
 
 ---
 
-# How I Would Enhance the Solution for Production Use
+## How I Would Enhance the Solution for Production Use
 
-## 1. From the Client / Business Perspective
+### 1. From the Client / Business Perspective
 
-### Service Model Design per Fulfillment Type
+#### Service Model Design per Fulfillment Type
 
 * Clearly define how each business model is handled during integration:
 
@@ -340,12 +338,12 @@ Before going live with the Cin7 → Extensiv integration, the following business
 * Add flags or configuration mappings to classify order type and define sync strategy accordingly.
 * Ensure that future extensibility allows multiple models per customer or SKU as needed.
 
-### Scheduled Automation
+#### Scheduled Automation
 
 * Set up automatic execution using Windows Task Scheduler, cron job, or a cloud function (e.g., Azure Function).
 * Ensures consistent daily syncs without manual intervention.
 
-### Email Alerts & Reporting
+#### Email Alerts & Reporting
 
 * Add daily email reports for:
 
@@ -353,12 +351,12 @@ Before going live with the Cin7 → Extensiv integration, the following business
   * Failed orders with reasons
 * Include CSV or log file attachments.
 
-### Staging & Production Environment Separation
+#### Staging & Production Environment Separation
 
 * Support separate config profiles for dev/staging/production.
 * Use environment variables for safer deployment and CI/CD.
 
-### Dashboard / Admin Interface
+#### Dashboard / Admin Interface
 
 * Optional admin interface to:
 
@@ -366,7 +364,7 @@ Before going live with the Cin7 → Extensiv integration, the following business
   * Reprocess failed orders
   * Update mappings without editing JSON manually
 
-### Audit Logging
+#### Audit Logging
 
 * Add structured logs for:
 
@@ -376,34 +374,34 @@ Before going live with the Cin7 → Extensiv integration, the following business
 
 ---
 
-## 2. From the Code / Architecture Perspective
+### 2. From the Code / Architecture Perspective
 
-### Unit Test Coverage
+#### Unit Test Coverage
 
 * Expand test coverage with xUnit/NUnit.
 * Test adapters, validators, and edge cases with mocked services.
 
-### Logging Infrastructure
+#### Logging Infrastructure
 
 * Use Serilog or Microsoft.Extensions.Logging for structured logs.
 * Enable writing to file, console, or external systems (e.g., Seq).
 
-### Retry & Resilience Framework
+#### Retry & Resilience Framework
 
 * Add retry logic using Polly (for transient errors, rate limits).
 * Implement exponential backoff and circuit-breaker patterns.
 
-### Configuration Validation
+#### Configuration Validation
 
 * Validate appsettings.json schema at startup.
 * Prevent runtime failures due to missing or invalid configs.
 
-### Plug-in Architecture
+#### Plug-in Architecture
 
 * Decouple adapters to support multiple platforms in the future (e.g., Shopify → Extensiv).
 * Register converters via DI or reflection.
 
-### CLI Parameter Support
+#### CLI Parameter Support
 
 * Allow runtime options like:
 
@@ -411,7 +409,7 @@ Before going live with the Cin7 → Extensiv integration, the following business
   * \--dry-run for safe testing
   * \--verbose for debugging
 
-### Containerization Support
+#### Containerization Support
 
 * Package as Docker image for portability.
 * Suitable for deploying in Kubernetes, ECS, or CI/CD pipelines.
